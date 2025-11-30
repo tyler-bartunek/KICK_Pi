@@ -8,15 +8,15 @@ class SPIHub:
 		self.pi = pi
 		self.reg = register
 
+		#Define spi handle as None so enable_bus and disable_bus logic works correctly
 		self.h_spi = None
-		
-		pass
 
 	def enable_bus(self, channel, rate) -> None:
 
 		if not self.h_spi:
 			#Last zero is for flags
 			self.h_spi = self.pi.spi_open(channel, rate, 0)
+
 
 	def disable_bus(self) -> None:
 
@@ -25,13 +25,18 @@ class SPIHub:
 		
 		self.h_spi = None
 
+
 	def toggle_cs(self, line_id:str) -> None:
 
 		line_dict = {'RL':0b01111111, 'CL':0b10111111, 'FL':0b11011111,
 		             'FR':0b11101111, 'CR':0b11110111, 'RR':0b11111011,
 					 'XX':0b11111111}
+		alt_keys_numeric = list(range(7))
+		
+		#need to add logic to check if alternate keys are being used
+		line_to_select = line_dict[line_id]
 
-		self.reg.write(line_dict[line_id])
+		self.reg.write(line_to_select)
 
 
 	def transfer(self, line_id:str, data:int, channel, rate):
