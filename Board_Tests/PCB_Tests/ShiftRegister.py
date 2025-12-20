@@ -2,11 +2,12 @@ import pigpio
 
 class ShiftRegister:
     
-    def __init__(self, pi, data_pin:int, latch_pin:int, sck_pin:int):
+    def __init__(self, pi, data_pin:int, latch_pin:int, sck_pin:int, oe_pin:int):
         
         self.data_pin = data_pin
         self.latch_pin = latch_pin
         self.sck_pin = sck_pin
+        self.oe_pin = oe_pin
         
         #Configure pigpio object to control gpio pins
         self.pi = pi
@@ -26,12 +27,14 @@ class ShiftRegister:
         #shift will happen
         self.pi.write(self.latch_pin, 0)
         
-        #Send garbage data on actual channel to trigger clock,
-        #should run long enough for callback to finish executing
+        #Send data bit by bit to the shift register
         for bit in self.data_list:
             self.pi.write(self.data_pin, bit)
             self.pi.write(self.sck_pin, 1)
             self.pi.write(self.sck_pin, 0)
+
+        #Enable outputs, shift values to storage register and outputs
+        self.pi.write(self.oe_pin, 0)
         self.pi.write(self.latch_pin, 1)
 
     
@@ -40,6 +43,7 @@ class ShiftRegister:
         self.pi.set_mode(self.data_pin, pigpio.OUTPUT)
         self.pi.set_mode(self.latch_pin, pigpio.OUTPUT)
         self.pi.set_mode(self.sck_pin, pigpio.OUTPUT)
+        self.pi.set_mode(self.oe_pin, pigpio.OUTPUT)
 
         return None
             

@@ -10,6 +10,7 @@ class SPIHub:
 
 		#Define spi handle as None so enable_bus and disable_bus logic works correctly
 		self.h_spi = None
+		
 
 	def enable_bus(self, channel, rate) -> None:
 
