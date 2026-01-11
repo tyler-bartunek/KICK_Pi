@@ -1,4 +1,6 @@
 #Imports
+import os.path as pth
+from os import mkdir
 import pigpio
 import random
 
@@ -7,37 +9,96 @@ from BOARD_GLOBALS import *
 from ShiftRegister import ShiftRegister
 from SPI_Board import SPIHub
 
-def SetupLogging():
 
-    raise NotImplementedError
+####################################################################################################################
+############################################# Logging Helper Functions #############################################
+####################################################################################################################
+def SetupLogging(rep:int, loc:str, seq:int, data_path:str = None):
 
-def TestLocation(spi_hub:SPIHub, sequence_list:list, Test, num_vals:int = 1000):
+    if not data_path:
+        data_path = pth.join(pth.dirname(__file__), "data")
+
+    #If the path doesnt exist already, make it
+    MkdirIfPathNotFound(data_path)
+
+    filename = "Rep_{}_Loc_{}_Seq_{}.csv".format(rep, loc, seq)
+    full_path = pth.join(data_path, filename)
+
+    f = open(full_path, 'w')
+
+    f.write("Rep,Loc,Seq,Freq,Sent,Received\n")
+
+    return f
+
+def MkdirIfPathNotFound(path:str) -> None:
+
+    if not pth.exists(path):
+        mkdir(path)
+
+    return None
+
+def PackageResults(f, sent, received, rep:int, loc:str, seq:int, freq:float) -> None:
+
+    for idx, val in enumerate(sent):
+
+        f.write("{0:},{1:},{2:},{3:},{4:},{5:}\n", rep, loc, seq, freq, val, received[idx])
+
+    f.close()
+
+    return None
+
+####################################################################################################################
+################################################ Location Testing ##################################################
+####################################################################################################################
+def TestLocation(spi_hub:SPIHub, sequence_list:list, Test, num_vals:int = 1000, rep:int = None, loc:str = None, data_path:str = None, logging:bool = False) -> None:
 
     #Set the frequency
     for seq in sequence_list:
+        #Setup logging for this location if loc specified
+        if loc and logging:
+            f = SetupLogging(rep, loc, seq, data_path)
+
         for freq in sequence_dict[seq]:
                         
             #Enable the bus
             spi_hub.enable_bus(0, freq)
 
             #Execute test
-            Test(spi_hub, num_vals)
+            sent, received = Test(spi_hub, num_vals)
+
+            PackageResults()
 
             #Disable hub for next frequency
             spi_hub.disable_bus()
+    
+    return None
 
 
 def EchoTest(spi_hub, num_iters = 1000):
+
+    sent = []
+    received = []
 
     for val in range(num_vals):
         #Pick a random vaue to send
         test_value = random.randint(0,255)
 
+        sent.append(test_value)
+
         #Send the random value twice, log second value received
         for i in range(2):
             received_value = spi_hub.transfer(test_value)
 
+        received.append(received_value)
 
+    if len(sent) != len(received):
+        raise("Mismatch in length of sent and received arrays")
+    else:
+        return sent, received
+
+####################################################################################################################
+################################################# Hardware Setup ###################################################
+####################################################################################################################
 def connect_pigpio():
     #Creates the pigpio object, sets it up and returns it
     pi = pigpio.pi()
@@ -45,6 +106,48 @@ def connect_pigpio():
         exit()
 
     return pi
+
+####################################################################################################################
+################################################ Data Simulator ####################################################
+#################################################################################################################### 
+ 
+
+####################################################################################################################
+################################################### Full Test ######################################################
+####################################################################################################################
+
+def TheBigKahuna():
+    """
+    Game plan:
+        1. For each cell of design:
+            a. Establish connection
+            b. Send and receive values for comparison
+
+    I also need a logging framework. 
+    """
+
+    reps, sequences = list(range(7)), list(range(8))
+
+    #Get the location
+    for rep in reps:
+        for loc in replicate_dict[rep]: 
+
+            print("Connect pico to location {}".format(loc))
+
+            rx = 0 
+
+            #Set frequency low as possible, send 0xFF
+            while rx != b'\xFF':
+                print("Scanning...")
+                rx = hub.transfer(loc, CHANNEL, rates[0])
+
+            #Established connection, disable hub to reset freq
+            print("Connection obtained, running tests...")
+            hub.disable_bus()
+        
+            #Run echo test over all frequencies
+            test_type = lambda spi_hub: EchoTest(hub)
+            TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True)
 
 def main():
 
@@ -57,37 +160,30 @@ def main():
     #Initialize the Board class
     hub = SPIHub(pi, shift)
 
+    #Create a folder for the experimental data
+    data_folder = pth.join(pth.dirname(__file__), "data")
+    MkdirIfPathNotFound(data_folder)
+
+    #Create a folder for functionality testing data
+    test_data = pth.join(data_folder, "code_functionality_tests")
+    MkdirIfPathNotFound(test_data)
+
+    logCreationTest = True
+    bigTest = False
+
     #Run through the test as defined in globals
     try:
-        """
-        Game plan:
-            1. For each cell of design:
-                a. Establish connection
-                b. Send and receive values for comparison
-
-        I also need a logging framework. 
-        """
-
-        reps, sequences = list(range(7)), list(range(8))
-
-        #TODO: Add logging component
-
-        #Get the location
-        for rep in reps:
-            for loc in replicate_dict[rep]: 
-
-                rx = 0 
-
-                #Set frequency low as possible, send 0xFF
-                while rx != b'\xFF':
-                    rx = hub.transfer(loc, CHANNEL, rates[0])
-
-                #Established connection, disable hub to reset freq
-                hub.disable_bus()
-            
-                #Run echo test over all frequencies
-                test_type = lambda spi_hub: EchoTest(hub)
-                TestLocation(hub, sequences, test_type)
+        
+        #Test that the filename is created correctly
+        if logCreationTest:
+            test_file = SetupLogging(0, "LogCreationTest", 0, data_path:str = None)
+            test_file.close()
+        #Test that echo works
+        if TestEchoLengthMismatch:
+            EchoMismatchTest()
+        #Running through the whole test once ready
+        if bigTest:
+            TheBigKahuna()
     
     except KeyboardInterrupt:
         print("Process terminated by user")

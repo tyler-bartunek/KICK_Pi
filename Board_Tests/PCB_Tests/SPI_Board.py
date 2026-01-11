@@ -1,4 +1,5 @@
 import pigpio
+import random
 from ShiftRegister import *
 
 class SPIHub:
@@ -53,3 +54,13 @@ class SPIHub:
 		(count, rx) = pi.spi_xfer(self.h_spi, data)
 
 		return rx
+
+#False Board for Simulation/Debugging Purposes
+class FalseBoard(SPIHub):
+
+	def __init__(self):
+		pass
+
+	def transfer(self, line_id:str, data:int, channel, rate):
+
+		return random.randint(0,255)
