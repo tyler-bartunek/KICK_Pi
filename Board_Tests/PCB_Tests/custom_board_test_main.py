@@ -7,7 +7,7 @@ import random
 #From adjacent files
 from BOARD_GLOBALS import *
 from ShiftRegister import ShiftRegister
-from SPI_Board import SPIHub
+from SPI_Board import SPIHub, FalseBoard
 
 
 ####################################################################################################################
@@ -64,7 +64,7 @@ def TestLocation(spi_hub:SPIHub, sequence_list:list, Test, num_vals:int = 1000, 
             spi_hub.enable_bus(0, freq)
 
             #Execute test
-            sent, received = Test(spi_hub, num_vals)
+            sent, received = Test(loc, spi_hub, freq, num_vals)
 
             PackageResults()
 
@@ -74,12 +74,12 @@ def TestLocation(spi_hub:SPIHub, sequence_list:list, Test, num_vals:int = 1000, 
     return None
 
 
-def EchoTest(spi_hub, num_iters = 1000):
+def EchoTest(spi_hub, location:str, freq:float = rates[0], num_iters = 1000):
 
     sent = []
     received = []
 
-    for val in range(num_vals):
+    for val in range(num_iters):
         #Pick a random vaue to send
         test_value = random.randint(0,255)
 
@@ -87,7 +87,7 @@ def EchoTest(spi_hub, num_iters = 1000):
 
         #Send the random value twice, log second value received
         for i in range(2):
-            received_value = spi_hub.transfer(test_value)
+            received_value = spi_hub.transfer(location, test_value,CHANNEL, freq)
 
         received.append(received_value)
 
@@ -110,13 +110,15 @@ def connect_pigpio():
 ####################################################################################################################
 ################################################ Data Simulator ####################################################
 #################################################################################################################### 
- 
+def EchoMismatchTest(board_sim:FalseBoard):
+
+    sent, received = EchoTest(board_sim, 'RL')
 
 ####################################################################################################################
 ################################################### Full Test ######################################################
 ####################################################################################################################
 
-def TheBigKahuna():
+def TheBigKahuna(hub:SPIHub):
     """
     Game plan:
         1. For each cell of design:
@@ -139,14 +141,14 @@ def TheBigKahuna():
             #Set frequency low as possible, send 0xFF
             while rx != b'\xFF':
                 print("Scanning...")
-                rx = hub.transfer(loc, CHANNEL, rates[0])
+                rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0])
 
             #Established connection, disable hub to reset freq
             print("Connection obtained, running tests...")
             hub.disable_bus()
         
             #Run echo test over all frequencies
-            test_type = lambda spi_hub: EchoTest(hub)
+            test_type = lambda spi_hub: EchoTest(loc, hub, )
             TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True)
 
 def main():
@@ -168,7 +170,9 @@ def main():
     test_data = pth.join(data_folder, "code_functionality_tests")
     MkdirIfPathNotFound(test_data)
 
-    logCreationTest = True
+    logCreationTest = False #Passed test
+    TestEchoLengthMismatch = False #Passed? Some debugging necessary
+    bigTestFalseBoard = True
     bigTest = False
 
     #Run through the test as defined in globals
@@ -176,14 +180,23 @@ def main():
         
         #Test that the filename is created correctly
         if logCreationTest:
-            test_file = SetupLogging(0, "LogCreationTest", 0, data_path:str = None)
+            test_file = SetupLogging(0, "LogCreationTest", 0, data_path = test_data)
             test_file.close()
         #Test that echo works
         if TestEchoLengthMismatch:
-            EchoMismatchTest()
+            #Create the false board
+            echo_test_board = FalseBoard(pi, shift)
+            EchoMismatchTest(echo_test_board)
+        if bigTestFalseBoard:
+            #Create the false board
+            echo_test_board = FalseBoard(pi, shift)
+
+            #Run the big test with the false board
+            TheBigKahuna(echo_test_board)
+
         #Running through the whole test once ready
         if bigTest:
-            TheBigKahuna()
+            TheBigKahuna(hub)
     
     except KeyboardInterrupt:
         print("Process terminated by user")

@@ -58,9 +58,18 @@ class SPIHub:
 #False Board for Simulation/Debugging Purposes
 class FalseBoard(SPIHub):
 
-	def __init__(self):
-		pass
+	def __init__(self, pi, register:ShiftRegister):
+		
+		self.pi = pi
+		self.reg = register
+
+		#Define spi handle as None so enable_bus and disable_bus logic works correctly
+		self.h_spi = None
 
 	def transfer(self, line_id:str, data:int, channel, rate):
 
-		return random.randint(0,255)
+		#Added this to make sure that the sync-up works for peripheral detection
+		if data == b'\xFF':
+			return data
+		else:
+			return random.randint(0,255)
