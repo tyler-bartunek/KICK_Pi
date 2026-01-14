@@ -37,15 +37,13 @@ def MkdirIfPathNotFound(path:str) -> None:
 
     return None
 
-def PackageResults(f, sent, received, rep:int, loc:str, seq:int, freq:float) -> None:
+def PackageResults(f, sent, received, rep:int, loc:str, seq:int, freq:float):
 
     for idx, val in enumerate(sent):
 
-        f.write("{0:},{1:},{2:},{3:},{4:},{5:}\n", rep, loc, seq, freq, val, received[idx])
+        f.write("{0:},{1:},{2:},{3:},{4:},{5:}\n".format(rep, loc, seq, freq, val, received[idx]))
 
-    f.close()
-
-    return None
+    return f
 
 ####################################################################################################################
 ################################################ Location Testing ##################################################
@@ -61,20 +59,23 @@ def TestLocation(spi_hub:SPIHub, sequence_list:list, Test, num_vals:int = 1000, 
         for freq in sequence_dict[seq]:
                         
             #Enable the bus
-            spi_hub.enable_bus(0, freq)
+            spi_hub.enable_bus(CHANNEL, freq)
 
-            #Execute test
-            sent, received = Test(loc, spi_hub, freq, num_vals)
+            #Execute test: Need to pass frequency and number of iterations as args
+            sent, received = Test(freq, num_vals)
 
-            PackageResults()
+            if logging:
+                f_new = PackageResults(f, sent, received, rep, loc, seq, freq)
 
             #Disable hub for next frequency
             spi_hub.disable_bus()
+
+        f.close()
     
     return None
 
 
-def EchoTest(spi_hub, location:str, freq:float = rates[0], num_iters = 1000):
+def EchoTest(spi_hub, location:str, freq:int, num_iters = 1000):
 
     sent = []
     received = []
@@ -87,7 +88,7 @@ def EchoTest(spi_hub, location:str, freq:float = rates[0], num_iters = 1000):
 
         #Send the random value twice, log second value received
         for i in range(2):
-            received_value = spi_hub.transfer(location, test_value,CHANNEL, freq)
+            received_value = spi_hub.transfer(location, test_value, CHANNEL, freq)
 
         received.append(received_value)
 
@@ -118,7 +119,7 @@ def EchoMismatchTest(board_sim:FalseBoard):
 ################################################### Full Test ######################################################
 ####################################################################################################################
 
-def TheBigKahuna(hub:SPIHub):
+def TheBigKahuna(hub:SPIHub, save_dir:str):
     """
     Game plan:
         1. For each cell of design:
@@ -128,10 +129,11 @@ def TheBigKahuna(hub:SPIHub):
     I also need a logging framework. 
     """
 
-    reps, sequences = list(range(7)), list(range(8))
+    reps, sequences = list(range(7)), list(range(6))
 
     #Get the location
     for rep in reps:
+        print("Beggining rep {}".format(rep))
         for loc in replicate_dict[rep]: 
 
             print("Connect pico to location {}".format(loc))
@@ -148,8 +150,10 @@ def TheBigKahuna(hub:SPIHub):
             hub.disable_bus()
         
             #Run echo test over all frequencies
-            test_type = lambda spi_hub: EchoTest(loc, hub, )
-            TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True)
+            test_type = lambda freq, num_vals: EchoTest(hub, loc, freq, num_iters = num_vals)
+            TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True, data_path = save_dir)
+
+    print("Tests complete")
 
 def main():
 
@@ -171,9 +175,9 @@ def main():
     MkdirIfPathNotFound(test_data)
 
     logCreationTest = False #Passed test
-    TestEchoLengthMismatch = False #Passed? Some debugging necessary
-    bigTestFalseBoard = True
-    bigTest = False
+    TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
+    bigTestFalseBoard = False #Passed after some type casting
+    bigTest = True
 
     #Run through the test as defined in globals
     try:
@@ -191,12 +195,16 @@ def main():
             #Create the false board
             echo_test_board = FalseBoard(pi, shift)
 
+            big_echo_folder = pth.join(test_data, 'false_board_echo_data')
+            MkdirIfPathNotFound(big_echo_folder)
+
             #Run the big test with the false board
-            TheBigKahuna(echo_test_board)
+            print("Testing with the false board")
+            TheBigKahuna(echo_test_board, big_echo_folder)
 
         #Running through the whole test once ready
         if bigTest:
-            TheBigKahuna(hub)
+            TheBigKahuna(hub, data_folder)
     
     except KeyboardInterrupt:
         print("Process terminated by user")

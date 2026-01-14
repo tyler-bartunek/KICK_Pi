@@ -15,19 +15,15 @@ OE = 26
 
 ## Testing logic variables
 #Rates to test
-MCU_CLK_RATE = 250e6
-divisor_powers = [16, 13, 11, 9, 7, 5, 3, 1]
-rates = [MCU_CLK_RATE / (2 ** div) for div in divisor_powers]
-labeled_rate_dict = dict(zip(['A','B','C','D','E','F', 'G', 'H'], rates))
+rates = [32000, 128000, 512000, 2048000, 8192000, 30e6]
+labeled_rate_dict = dict(zip(['A','B','C','D','E','F'], rates))
 
-sequence_freq_keys = {0:['A', 'B', 'H', 'C', 'G', 'D', 'F', 'E'],
-                      1:['B', 'C', 'A', 'D', 'H', 'E', 'G', 'F'],
-                      2:['C', 'D', 'B', 'E', 'A', 'F', 'H', 'G'],
-                      3:['D', 'E', 'C', 'F', 'B', 'G', 'A', 'H'],
-                      4:['E', 'F', 'D', 'G', 'C', 'H', 'B', 'A'],
-                      5:['F', 'G', 'E', 'H', 'D', 'A', 'C', 'B'],
-                      6:['G', 'H', 'F', 'A', 'E', 'B', 'D', 'C'],
-                      7:['H', 'A', 'G', 'B', 'F', 'C', 'E', 'D']}
+sequence_freq_keys = {0:['A', 'B', 'F', 'C', 'E', 'D'],
+                      1:['B', 'C', 'A', 'D', 'F', 'E'],
+                      2:['C', 'D', 'B', 'E', 'A', 'F'],
+                      3:['D', 'E', 'C', 'F', 'B', 'A'],
+                      4:['E', 'F', 'D', 'A', 'C', 'B'],
+                      5:['F', 'A', 'E', 'B', 'D', 'C']}
 sequence_dict = {seq:[labeled_rate_dict[key] for key in sequence_freq_keys[seq]]for seq in sequence_freq_keys.keys()}
 
 #Locations and replicates in a dict

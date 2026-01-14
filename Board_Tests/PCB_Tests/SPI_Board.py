@@ -17,7 +17,7 @@ class SPIHub:
 
 		if not self.h_spi:
 			#Last zero is for flags
-			self.h_spi = self.pi.spi_open(channel, rate, 0)
+			self.h_spi = self.pi.spi_open(channel, int(rate), 0)
 
 
 	def disable_bus(self) -> None:
