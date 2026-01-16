@@ -23,8 +23,8 @@ class ShiftRegister:
         #Set data attribute for use in callback function
         self.data_list = self.to_bitarray(data)
         
-        #Pull latch low for shift, set done to false to guarantee
-        #shift will happen
+        #Disable outputs, Pull latch low for shift
+        self.pi.write(self.oe_pin, 1)
         self.pi.write(self.latch_pin, 0)
         
         #Send data bit by bit to the shift register

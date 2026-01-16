@@ -88,7 +88,7 @@ def EchoTest(spi_hub, location:str, freq:int, num_iters = 1000):
 
         #Send the random value twice, log second value received
         for i in range(2):
-            received_value = spi_hub.transfer(location, test_value, CHANNEL, freq)
+            received_value = spi_hub.transfer(location, test_value, CHANNEL, freq, testing = True)
 
         received.append(received_value)
 
@@ -143,7 +143,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             #Set frequency low as possible, send 0xFF
             while rx != b'\xFF':
                 print("Scanning...")
-                rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0])
+                rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0], testing = True)
 
             #Established connection, disable hub to reset freq
             print("Connection obtained, running tests...")
@@ -162,6 +162,9 @@ def main():
     
     #Initialize the ShiftRegister object
     shift = ShiftRegister(pi, DATA, LATCH, SHIFT_CLK, OE)
+
+    #Set the default cs pin to be an ouput
+    pi.set_mode(CS,OUTPUT)
     
     #Initialize the Board class
     hub = SPIHub(pi, shift)

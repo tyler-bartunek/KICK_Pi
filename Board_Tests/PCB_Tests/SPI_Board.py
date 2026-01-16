@@ -28,11 +28,11 @@ class SPIHub:
 		self.h_spi = None
 
 
-	def toggle_cs(self, line_id:str) -> None:
+	def toggle_cs(self, line_id:str, testing:bool = False, default_cs = CS) -> None:
 
 		line_dict = {'RL':0b01111111, 'CL':0b10111111, 'FL':0b11011111,
 		             'FR':0b11101111, 'CR':0b11110111, 'RR':0b11111011,
-					 'XX':0b11111111}
+					 'XX':0xFF}
 		alt_keys_numeric = list(range(7))
 		
 		#need to add logic to check if alternate keys are being used
@@ -40,13 +40,18 @@ class SPIHub:
 
 		self.reg.write(line_to_select)
 
+		if testing and (line_to_select == 0xFF):
+			self.pi.write(default_cs, 0)
+		else:
+			self.pi.write(default_cs, 1)
 
-	def transfer(self, line_id:str, data:int, channel, rate):
+
+	def transfer(self, line_id:str, data:int, channel, rate, testing:bool = False, default_cs = CS):
 
 		#Tentative plan: open bus if not open, select line, send message, line high
 
 		#Select line
-		self.toggle_cs(line_id)
+		self.toggle_cs(line_id, testing = testing, default_cs = default_cs)
 
 		#Enable the bus if it isn't already active
 		self.enable_bus(channel, rate)
