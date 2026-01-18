@@ -34,8 +34,8 @@ class ShiftRegister:
             self.pi.write(self.sck_pin, 0)
 
         #Enable outputs, shift values to storage register and outputs
-        self.pi.write(self.oe_pin, 0)
         self.pi.write(self.latch_pin, 1)
+        self.pi.write(self.oe_pin, 0)
 
     
     def connect_pins(self) -> None:

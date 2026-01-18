@@ -82,13 +82,15 @@ def EchoTest(spi_hub, location:str, freq:int, num_iters = 1000):
 
     for val in range(num_iters):
         #Pick a random vaue to send
-        test_value = random.randint(0,255)
+        test_value = random.randint(0,256)
 
         sent.append(test_value)
 
         #Send the random value twice, log second value received
         for i in range(2):
-            received_value = spi_hub.transfer(location, test_value, CHANNEL, freq, testing = True)
+            received_bytes = spi_hub.transfer(location, test_value.to_bytes(1, byteorder = "big"), CHANNEL, freq, testing = True)
+            received_array = bytearray(received_bytes)
+            received_value = received_array[0]
 
         received.append(received_value)
 
@@ -119,9 +121,11 @@ def PicoCommTest(hub:SPIHub, connection_point:str):
 
     for i in range(255):
 
-        received = hub.transfer(connection_point, i, CHANNEL, rates[0])
+        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, rates[0])
+        received_array = bytearray(received)
+        received_value = received_array[0]
 
-        print("Sent {}, received {}".format(i, received))
+        print("Sent {}, received {}".format(i, received_value))
 
 ####################################################################################################################
 ################################################### Full Test ######################################################
