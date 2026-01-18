@@ -145,7 +145,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
 
     #Get the location
     for rep in reps:
-        print("Beggining rep {}".format(rep))
+        print("Beginning rep {}".format(rep))
         for loc in replicate_dict[rep]: 
 
             print("Connect pico to location {}".format(loc))
@@ -158,7 +158,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
                 rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0], testing = True)
 
             #Established connection, disable hub to reset freq
-            print("Connection obtained, running tests...")
+            print("Connection obtained, running tests...\n")
             hub.disable_bus()
         
             #Run echo test over all frequencies
