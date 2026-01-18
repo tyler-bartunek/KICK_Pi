@@ -1,6 +1,7 @@
 import pigpio
 import random
 from ShiftRegister import *
+from BOARD_GLOBALS import *
 
 class SPIHub:
 	
@@ -56,7 +57,7 @@ class SPIHub:
 		#Enable the bus if it isn't already active
 		self.enable_bus(channel, rate)
 
-		(count, rx) = pi.spi_xfer(self.h_spi, data)
+		(count, rx) = self.pi.spi_xfer(self.h_spi, data)
 
 		return rx
 

@@ -115,6 +115,14 @@ def EchoMismatchTest(board_sim:FalseBoard):
 
     sent, received = EchoTest(board_sim, 'RL')
 
+def PicoCommTest(hub:SPIHub, connection_point:str):
+
+    for i in range(255):
+
+        received = hub.transfer(connection_point, i, CHANNEL, rates[0])
+
+        print("Sent {}, received {}".format(i, received))
+
 ####################################################################################################################
 ################################################### Full Test ######################################################
 ####################################################################################################################
@@ -152,6 +160,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             #Run echo test over all frequencies
             test_type = lambda freq, num_vals: EchoTest(hub, loc, freq, num_iters = num_vals)
             TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True, data_path = save_dir)
+            print("done\n")
 
     print("Tests complete")
 
@@ -164,7 +173,7 @@ def main():
     shift = ShiftRegister(pi, DATA, LATCH, SHIFT_CLK, OE)
 
     #Set the default cs pin to be an ouput
-    pi.set_mode(CS,OUTPUT)
+    pi.set_mode(CS, pigpio.OUTPUT)
     
     #Initialize the Board class
     hub = SPIHub(pi, shift)
@@ -180,7 +189,8 @@ def main():
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
     bigTestFalseBoard = False #Passed after some type casting
-    bigTest = True
+    testPicoConnection = True
+    bigTest = False
 
     #Run through the test as defined in globals
     try:
@@ -204,6 +214,21 @@ def main():
             #Run the big test with the false board
             print("Testing with the false board")
             TheBigKahuna(echo_test_board, big_echo_folder)
+        
+        #Test that the pico's SPI code is functioning properly
+        if testPicoConnection:
+
+            rx = 0
+
+            #Set frequency low as possible, send 0xFF
+            print("Scanning...")
+            while rx != b'\xFF':  
+                rx = hub.transfer('FL', b'\xFF', CHANNEL, rates[0], testing = True)
+
+            print("Connection obtained, running pico comm test...\n")
+
+            PicoCommTest(hub, 'FL')
+            print('\n Complete')
 
         #Running through the whole test once ready
         if bigTest:
