@@ -227,11 +227,11 @@ def main():
             #Set frequency low as possible, send 0xFF
             print("Scanning...")
             while rx != b'\xFF':  
-                rx = hub.transfer('XX', b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer('FL', b'\xFF', CHANNEL, rates[0], testing = True)
 
             print("Connection obtained, running pico comm test...\n")
 
-            PicoCommTest(hub, 'XX')
+            PicoCommTest(hub, 'FL')
             print('\n Complete')
 
         #Running through the whole test once ready

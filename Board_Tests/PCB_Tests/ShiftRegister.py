@@ -13,6 +13,9 @@ class ShiftRegister:
         self.pi = pi
         self.connect_pins()
 
+        #Disable outputs by default until our first write
+        self.pi.write(self.oe_pin, 1)
+
         #index variable for data bitarray and flag to mark when message is sent
         self.bit_index = 0
         self.done_sending = False
@@ -23,8 +26,7 @@ class ShiftRegister:
         #Set data attribute for use in callback function
         self.data_list = self.to_bitarray(data)
         
-        #Disable outputs, Pull latch low for shift
-        self.pi.write(self.oe_pin, 1)
+        #Pull latch low for shift
         self.pi.write(self.latch_pin, 0)
         
         #Send data bit by bit to the shift register
