@@ -51,8 +51,6 @@ class SPIHub:
 
 		#open bus if not open, select line, send message, line high
 
-		#TODO: Convert data into a byte or bit sequence.
-
 		#Select line
 		self.toggle_cs(line_id, testing = testing, default_cs = default_cs)
 

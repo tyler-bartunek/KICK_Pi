@@ -119,9 +119,9 @@ def EchoMismatchTest(board_sim:FalseBoard):
 
 def PicoCommTest(hub:SPIHub, connection_point:str):
 
-    for i in range(255):
+    for i in range(256):
 
-        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, rates[0])
+        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, rates[0], testing = True)
         received_array = bytearray(received)
         received_value = received_array[0]
 
@@ -227,11 +227,11 @@ def main():
             #Set frequency low as possible, send 0xFF
             print("Scanning...")
             while rx != b'\xFF':  
-                rx = hub.transfer('FL', b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer('XX', b'\xFF', CHANNEL, rates[0], testing = True)
 
             print("Connection obtained, running pico comm test...\n")
 
-            PicoCommTest(hub, 'FL')
+            PicoCommTest(hub, 'XX')
             print('\n Complete')
 
         #Running through the whole test once ready

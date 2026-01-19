@@ -6,7 +6,7 @@ SPI0_SCLK = 11
 CHANNEL = 0
 CIPO = 9
 COPI = 10
-CS = 24
+CS = 8
 
 #Shift register pins
 LATCH = 5 
