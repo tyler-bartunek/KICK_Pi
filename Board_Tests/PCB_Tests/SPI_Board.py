@@ -59,6 +59,9 @@ class SPIHub:
 
 		(count, rx) = self.pi.spi_xfer(self.h_spi, data)
 
+		#Pulse CS high at end of transaction
+		self.toggle_cs('XX', testing = False, default_cs = default_cs)
+
 		return rx
 
 #False Board for Simulation/Debugging Purposes
