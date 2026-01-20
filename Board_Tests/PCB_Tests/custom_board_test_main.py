@@ -146,6 +146,10 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
     #Get the location
     for rep in reps:
         print("Beginning rep {}".format(rep))
+
+        rep_folder = pth.join(save_dir, 'Rep_{}'.format(rep))
+        MkdirIfPathNotFound(rep_folder)
+
         for loc in replicate_dict[rep]: 
 
             print("Connect pico to location {}".format(loc))
@@ -163,7 +167,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
         
             #Run echo test over all frequencies
             test_type = lambda freq, num_vals: EchoTest(hub, loc, freq, num_iters = num_vals)
-            TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True, data_path = save_dir)
+            TestLocation(hub, sequences, test_type, rep = rep, loc = loc, logging = True, data_path = rep_folder)
             print("done\n")
 
     print("Tests complete")
