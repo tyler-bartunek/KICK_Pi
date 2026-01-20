@@ -138,10 +138,10 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             a. Establish connection
             b. Send and receive values for comparison
 
-    I also need a logging framework. 
+    Rep 0 will be skipped in proper analysis, though exploratory could be of interest.
     """
 
-    reps, sequences = list(range(2,7)), list(range(6))
+    reps, sequences = list(range(3,7)), list(range(6))
 
     #Get the location
     for rep in reps:
@@ -231,11 +231,11 @@ def main():
             #Set frequency low as possible, send 0xFF
             print("Scanning...")
             while rx != b'\xFF':  
-                rx = hub.transfer('FL', b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer('CR', b'\xFF', CHANNEL, rates[0], testing = True)
 
             print("Connection obtained, running pico comm test...\n")
 
-            PicoCommTest(hub, 'FL')
+            PicoCommTest(hub, 'CR')
             print('\n Complete')
 
         #Running through the whole test once ready
