@@ -82,7 +82,7 @@ def EchoTest(spi_hub, location:str, freq:int, num_iters = 1000):
 
     for val in range(num_iters):
         #Pick a random vaue to send
-        test_value = random.randint(0,256)
+        test_value = random.randint(0,255)
 
         sent.append(test_value)
 
@@ -141,7 +141,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
     I also need a logging framework. 
     """
 
-    reps, sequences = list(range(7)), list(range(6))
+    reps, sequences = list(range(2,7)), list(range(6))
 
     #Get the location
     for rep in reps:
@@ -153,8 +153,8 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             rx = 0 
 
             #Set frequency low as possible, send 0xFF
-            while rx != b'\xFF':
-                print("Scanning...")
+            print("Scanning...")
+            while rx != b'\xFF': 
                 rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0], testing = True)
 
             #Established connection, disable hub to reset freq
@@ -193,8 +193,8 @@ def main():
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
     bigTestFalseBoard = False #Passed after some type casting
-    testPicoConnection = True
-    bigTest = False
+    testPicoConnection = False
+    bigTest = True
 
     #Run through the test as defined in globals
     try:
