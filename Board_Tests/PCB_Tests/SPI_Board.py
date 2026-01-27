@@ -1,7 +1,11 @@
+#Basic functionality
 import pigpio
-import random
+import random #Specifically for the false board tests
+
+#Custom tools
 from ShiftRegister import *
 from BOARD_GLOBALS import *
+from Module import *
 
 class SPIHub:
 	
@@ -9,9 +13,21 @@ class SPIHub:
 
 		self.pi = pi
 		self.reg = register
+		self.attachment = {'RL':None, 'CL':None, 'FL':None, 'FR':None, 'CR':None, 'RR':None}
 
 		#Define spi handle as None so enable_bus and disable_bus logic works correctly
 		self.h_spi = None
+
+	def AtLocation(self, line_id:str, value):
+
+		try:
+			self.attachment[line_id].run(value)
+		except AttributeError:
+			#TODO: Add logic to ascertain a connection
+			if not self.attachment[line_id]:
+				pass 
+			else:
+				raise AttributeError('Failed to identify module or provide a run method for it')
 		
 
 	def enable_bus(self, channel, rate) -> None:
