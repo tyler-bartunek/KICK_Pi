@@ -6,6 +6,7 @@ import random
 
 #From adjacent files
 from BOARD_GLOBALS import *
+from Test_Parameter_Globals import *
 from ShiftRegister import ShiftRegister
 from SPI_Board import SPIHub, FalseBoard
 
@@ -121,7 +122,7 @@ def PicoCommTest(hub:SPIHub, connection_point:str):
 
     for i in range(256):
 
-        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, rates[0], testing = True)
+        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, SYNC_RATE, testing = True)
         received_array = bytearray(received)
         received_value = received_array[0]
 
@@ -159,7 +160,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             #Set frequency low as possible, send 0xFF
             print("Scanning...")
             while rx != b'\xFF': 
-                rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer(loc, b'\xFF', CHANNEL, SYNC_RATE, testing = True)
 
             #Established connection, disable hub to reset freq
             print("Connection obtained, running tests...\n")
@@ -197,8 +198,8 @@ def main():
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
     bigTestFalseBoard = False #Passed after some type casting
-    testPicoConnection = False
-    bigTest = True
+    testPicoConnection = True
+    bigTest = False
 
     #Run through the test as defined in globals
     try:
@@ -231,7 +232,7 @@ def main():
             #Set frequency low as possible, send 0xFF
             print("Scanning...")
             while rx != b'\xFF':  
-                rx = hub.transfer('XX', b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer('XX', b'\xFF', CHANNEL, SYNC_RATE, testing = True)
 
             print("Connection obtained, running pico comm test...\n")
 

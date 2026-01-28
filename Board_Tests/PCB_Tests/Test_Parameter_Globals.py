@@ -1,6 +1,6 @@
 ## Testing logic variables
 #Rates to test
-rates = [32000, 128000, 512000, 2048000, 8192000, 30e6]
+rates = [1.5e6, 3e6, 4.5e6, 6e6, 7.5e6, 9e6]
 labeled_rate_dict = dict(zip(['A','B','C','D','E','F'], rates))
 
 sequence_freq_keys = {0:['A', 'B', 'F', 'C', 'E', 'D'],
