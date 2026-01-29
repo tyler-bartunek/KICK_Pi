@@ -142,7 +142,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
     Rep 0 will be skipped in proper analysis, though exploratory could be of interest.
     """
 
-    reps, sequences = list(range(5,7)), list(range(6))
+    reps, sequences = list(range(1,7)), list(range(6))
 
     #Get the location
     for rep in reps:
@@ -188,7 +188,7 @@ def main():
     hub = SPIHub(pi, shift)
 
     #Create a folder for the experimental data
-    data_folder = pth.join(pth.dirname(__file__), "data")
+    data_folder = pth.join(pth.dirname(__file__), "data/refined_tests")
     MkdirIfPathNotFound(data_folder)
 
     #Create a folder for functionality testing data
@@ -227,16 +227,18 @@ def main():
         #Test that the pico's SPI code is functioning properly
         if testPicoConnection:
 
-            rx = 0
+            #Location to test
+            connection_point = 'RR'
 
             #Set frequency low as possible, send 0xFF
+            rx = 0
             print("Scanning...")
             while rx != b'\xFF':  
-                rx = hub.transfer('XX', b'\xFF', CHANNEL, SYNC_RATE, testing = True)
+                rx = hub.transfer(connection_point, b'\xFF', CHANNEL, SYNC_RATE, testing = True)
 
             print("Connection obtained, running pico comm test...\n")
 
-            PicoCommTest(hub, 'XX')
+            PicoCommTest(hub, connection_point)
             print('\n Complete')
 
         #Running through the whole test once ready
