@@ -142,7 +142,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
     Seq 0 will be skipped in proper analysis, though exploratory could be of interest.
     """
 
-    reps, sequences = list(range(3,7)), list(range(6))
+    reps, sequences = list(range(5,7)), list(range(6))
 
     #Get the location
     for rep in reps:
@@ -172,6 +172,10 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             print("done\n")
 
     print("Tests complete")
+
+####################################################################################################################
+##################################################### Main #########################################################
+####################################################################################################################
 
 def main():
 
@@ -231,7 +235,7 @@ def main():
         if testPicoConnection:
 
             #Location to test
-            connection_point = 'RR'
+            connection_point = 'XX'
 
             #Set frequency low as possible, send 0xFF
             rx = 0
