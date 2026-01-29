@@ -191,9 +191,12 @@ def main():
     data_folder = pth.join(pth.dirname(__file__), "data/refined_tests")
     MkdirIfPathNotFound(data_folder)
 
-    #Create a folder for functionality testing data
-    test_data = pth.join(data_folder, "code_functionality_tests")
-    MkdirIfPathNotFound(test_data)
+    #If we're testing filesaving and such
+    testing = False
+    if testing:
+        #Create a folder for functionality testing data
+        test_data = pth.join(data_folder, "code_functionality_tests")
+        MkdirIfPathNotFound(test_data)
 
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
