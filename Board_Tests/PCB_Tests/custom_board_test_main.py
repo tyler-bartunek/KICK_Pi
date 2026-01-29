@@ -139,10 +139,10 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             a. Establish connection
             b. Send and receive values for comparison
 
-    Rep 0 will be skipped in proper analysis, though exploratory could be of interest.
+    Seq 0 will be skipped in proper analysis, though exploratory could be of interest.
     """
 
-    reps, sequences = list(range(1,7)), list(range(6))
+    reps, sequences = list(range(3,7)), list(range(6))
 
     #Get the location
     for rep in reps:
