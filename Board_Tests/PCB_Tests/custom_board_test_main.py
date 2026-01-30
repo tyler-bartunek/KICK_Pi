@@ -205,8 +205,8 @@ def main():
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
     bigTestFalseBoard = False #Passed after some type casting
-    testPicoConnection = True
-    bigTest = False
+    testPicoConnection = False
+    bigTest = True
 
     #Run through the test as defined in globals
     try:
