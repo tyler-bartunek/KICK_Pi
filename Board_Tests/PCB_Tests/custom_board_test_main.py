@@ -6,6 +6,7 @@ import random
 
 #From adjacent files
 from BOARD_GLOBALS import *
+from Test_Parameter_Globals import *
 from ShiftRegister import ShiftRegister
 from SPI_Board import SPIHub, FalseBoard
 
@@ -121,7 +122,7 @@ def PicoCommTest(hub:SPIHub, connection_point:str):
 
     for i in range(256):
 
-        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, rates[0], testing = True)
+        received = hub.transfer(connection_point, i.to_bytes(1, byteorder = "big"), CHANNEL, SYNC_RATE, testing = True)
         received_array = bytearray(received)
         received_value = received_array[0]
 
@@ -138,7 +139,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             a. Establish connection
             b. Send and receive values for comparison
 
-    Rep 0 will be skipped in proper analysis, though exploratory could be of interest.
+    Seq 0 will be skipped in proper analysis, though exploratory could be of interest.
     """
 
     reps, sequences = list(range(5,7)), list(range(6))
@@ -159,7 +160,7 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             #Set frequency low as possible, send 0xFF
             print("Scanning...")
             while rx != b'\xFF': 
-                rx = hub.transfer(loc, b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer(loc, b'\xFF', CHANNEL, SYNC_RATE, testing = True)
 
             #Established connection, disable hub to reset freq
             print("Connection obtained, running tests...\n")
@@ -171,6 +172,10 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
             print("done\n")
 
     print("Tests complete")
+
+####################################################################################################################
+##################################################### Main #########################################################
+####################################################################################################################
 
 def main():
 
@@ -187,12 +192,15 @@ def main():
     hub = SPIHub(pi, shift)
 
     #Create a folder for the experimental data
-    data_folder = pth.join(pth.dirname(__file__), "data")
+    data_folder = pth.join(pth.dirname(__file__), "data/refined_tests")
     MkdirIfPathNotFound(data_folder)
 
-    #Create a folder for functionality testing data
-    test_data = pth.join(data_folder, "code_functionality_tests")
-    MkdirIfPathNotFound(test_data)
+    #If we're testing filesaving and such
+    testing = False
+    if testing:
+        #Create a folder for functionality testing data
+        test_data = pth.join(data_folder, "code_functionality_tests")
+        MkdirIfPathNotFound(test_data)
 
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
@@ -226,16 +234,18 @@ def main():
         #Test that the pico's SPI code is functioning properly
         if testPicoConnection:
 
-            rx = 0
+            #Location to test
+            connection_point = 'XX'
 
             #Set frequency low as possible, send 0xFF
+            rx = 0
             print("Scanning...")
             while rx != b'\xFF':  
-                rx = hub.transfer('XX', b'\xFF', CHANNEL, rates[0], testing = True)
+                rx = hub.transfer(connection_point, b'\xFF', CHANNEL, SYNC_RATE, testing = True)
 
             print("Connection obtained, running pico comm test...\n")
 
-            PicoCommTest(hub, 'XX')
+            PicoCommTest(hub, connection_point)
             print('\n Complete')
 
         #Running through the whole test once ready
