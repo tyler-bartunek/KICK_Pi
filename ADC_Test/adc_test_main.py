@@ -12,7 +12,7 @@ def connect_ads(i2cbus_number):
     ads.setGain(ads.PGA_4_096V)
 
     #Set the mode: CONTINUOUS
-    ads.set_mode(ads.MODE_CONTINUOUS)
+    ads.setMode(ads.MODE_CONTINUOUS)
 
     #Set the data rate: fastest
     ads.setDataRate(ads.DR_ADS111X_860)
@@ -20,17 +20,11 @@ def connect_ads(i2cbus_number):
     return ads
 
 #Get a reading from the device
-def read_ads(ads):
+def read_ads(ads, pin_number:int):
 
-    value = 0
-
-    ads.requestADC(0)
-
-    if ADS.isReady() :
-        value = ADS.getValue()
-        ADS.requestADC(0)
-
-    return value
+    ads.requestADC(pin_number)
+    value = ads.getValue()
+    return ads.toVoltage(value)
 
 
 ###################################################################################################################
@@ -46,10 +40,11 @@ def main():
         exit()
 
 
+    #Read from pin A0
+    pin_to_read = 0
     try:
-
         while True:
-            print(read_ads(ads))
+            print(read_ads(ads, pin_to_read))
 
     except KeyboardInterrupt:
 
