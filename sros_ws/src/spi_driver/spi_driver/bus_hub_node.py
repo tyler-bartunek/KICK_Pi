@@ -7,9 +7,12 @@ from rclpy.node import node
 from hardware_interfaces import ShiftRegister, DeviceInterface
 
 
-class BusHub(Node):
+class BusHubNode(Node):
 
     def __init__(self):
+        super.__init__("bus_hub")
+        num_paths = 6
+
         self.active_paths = {}
         for path_id in range(6):
             if self.who_are_you_handshake(path_id):
@@ -29,12 +32,12 @@ def main():
     #Start the client library
     rclpy.init(args = args)
 
-    module_nexus = BusHub()
+    bus_hub = BusHubNode()
 
     #TODO: Check if the spin_until_future_complete makes more sense here
-    rclpy.spin(BusHub)
+    rclpy.spin(bus_hub)
 
-    module_nexus.destroy_node()
+    bus_hub.destroy_node()
     rclpy.shutdown()
 
     raise NotImplementedError
