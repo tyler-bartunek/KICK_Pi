@@ -14,7 +14,7 @@ class BusHubNode(Node):
         num_paths = 6
 
         self.active_paths = {}
-        for path_id in range(6):
+        for path_id in range(num_paths):
             if self.who_are_you_handshake(path_id):
                 # Dynamically create the publisher for THIS specific path
                 topic_name = f"path_{path_id}/data"
