@@ -3,6 +3,7 @@
 import RPi.GPIO
 import spidev
 
+GPIO.setmode(GPIO.BCM)
 
 class ShiftRegister:
 
@@ -15,8 +16,7 @@ class ShiftRegister:
         self.sck_pin = 13
         self.oe_pin = 5
         
-        #Configure GPIO pins: Unclear how this works with ROS
-        GPIO.setmode(GPIO.BCM)
+        #Configure GPIO pins
         self.connect_pins()
 
         #Disable outputs by default until our first write
