@@ -1,9 +1,10 @@
 
 
-import RPi.GPIO
+import RPi.GPIO as GPIO
 import spidev
 
-GPIO.setmode(GPIO.BCM)
+from spi_driver.msg import SPIFrame
+
 
 class ShiftRegister:
 
@@ -17,6 +18,7 @@ class ShiftRegister:
         self.oe_pin = 5
         
         #Configure GPIO pins
+        GPIO.setmode(GPIO.BCM)
         self.connect_pins()
 
         #Disable outputs by default until our first write
@@ -53,17 +55,7 @@ class ShiftRegister:
         GPIO.setup(self.sck_pin, GPIO.OUT)
         GPIO.setup(self.oe_pin, GPIO.OUT)
 
-        return None
-            
-    # def rising_edge_callback(self, gpio, level, tick):
-        
-    #     if self.bit_index < len(self.data_list):
-    #         self.pi.write(self.data_pin, self.data_list[self.bit_index])
-    #         print("Writing {}".format(self.data_list[self.bit_index]))
-    #         self.bit_index += 1
-    #     else:
-    #         self.done_sending = True
-    #         self.pi.write(self.latch_pin, 1)      
+        return None     
              
     def to_bitarray(self, data:int) -> list:
         
@@ -81,23 +73,7 @@ class ShiftRegister:
 
         return bit_array
 
-
-class DeviceInterface:
-
-    def __init__(self, node, path_id):
-        self.path_id = path_id
-        # The peripheral "talks" to the world here
-        self.pub = node.create_publisher(DataMsg, f"path_{path_id}/data", 10)
-        # The world "talks" to the peripheral here
-        self.sub = node.create_subscription(CmdMsg, f"path_{path_id}/cmd", self.cmd_callback, 10)
-        self.last_cmd = None
-
-    def cmd_callback(self, msg):
-        self.last_cmd = msg # Queue this up for the next SPI cycle
-
-
-
-class SPIHub:
+class Harness:
 	
 	def __init__(self):
 
@@ -156,4 +132,33 @@ class SPIHub:
 		self.toggle_cs(8)
 
 		return rx
-"""
+
+
+class DeviceInterface:
+    """
+    Holds the internal state of each connected device
+    """
+    def __init__(self, node, path_id, channel, status="inactive", id = None):
+
+        self.status = status
+        self.prev_status = status
+        self.node = node
+        self.path_id = path_id
+        self.channel = channel
+        self.id = id
+
+        self.publisher = None
+        self.subscriber = None
+    
+    def activate(self):
+        self.publisher = self.node.create_publisher(SPIFrame, f"path_{self.path_id}/data", 10)
+        self.subscriber = self.node.create_subscription(SPIFrame, f"path_{self.path_id}/cmd", self.cmd_callback, 10)
+
+    def deactivate(self):
+        if self.publisher and self.subscriber:
+            self.node.destroy_publisher(self.publisher)
+            self.node.destroy_subscriber(self.subscriber)
+            self.publisher = None
+            self.subscriber = None
+
+
