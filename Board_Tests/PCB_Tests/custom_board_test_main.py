@@ -1,7 +1,7 @@
 #Imports
 import os.path as pth
 from os import mkdir
-import pigpio
+import RPi.GPIO as GPIO
 import random
 
 #From adjacent files
@@ -101,17 +101,6 @@ def EchoTest(spi_hub, location:str, freq:int, num_iters = 1000):
         return sent, received
 
 ####################################################################################################################
-################################################# Hardware Setup ###################################################
-####################################################################################################################
-def connect_pigpio():
-    #Creates the pigpio object, sets it up and returns it
-    pi = pigpio.pi()
-    if not pi.connected:
-        exit()
-
-    return pi
-
-####################################################################################################################
 ################################################ Data Simulator ####################################################
 #################################################################################################################### 
 def EchoMismatchTest(board_sim:FalseBoard):
@@ -178,18 +167,16 @@ def TheBigKahuna(hub:SPIHub, save_dir:str):
 ####################################################################################################################
 
 def main():
-
-    #Initialize the pigpio daemon
-    pi = connect_pigpio()
     
     #Initialize the ShiftRegister object
-    shift = ShiftRegister(pi, DATA, LATCH, SHIFT_CLK, OE)
+    shift = ShiftRegister(DATA, LATCH, SHIFT_CLK, OE)
 
     #Set the default cs pin to be an ouput
-    pi.set_mode(CS, pigpio.OUTPUT)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(CS, GPIO.OUT)
     
     #Initialize the Board class
-    hub = SPIHub(pi, shift)
+    hub = SPIHub(shift)
 
     #Create a folder for the experimental data
     data_folder = pth.join(pth.dirname(__file__), "data/refined_tests")
@@ -205,8 +192,8 @@ def main():
     logCreationTest = False #Passed test
     TestEchoLengthMismatch = False #Passed? Some debugging necessary but seems to work now
     bigTestFalseBoard = False #Passed after some type casting
-    testPicoConnection = False
-    bigTest = True
+    testPicoConnection = True
+    bigTest = False
 
     #Run through the test as defined in globals
     try:
@@ -235,12 +222,12 @@ def main():
         if testPicoConnection:
 
             #Location to test
-            connection_point = 'XX'
+            connection_point = 0
 
             #Set frequency low as possible, send 0xFF
-            rx = 0
+            rx = [0]
             print("Scanning...")
-            while rx != b'\xFF':  
+            while rx[0] != 255:  
                 rx = hub.transfer(connection_point, b'\xFF', CHANNEL, SYNC_RATE, testing = True)
 
             print("Connection obtained, running pico comm test...\n")
@@ -254,7 +241,6 @@ def main():
     
     except KeyboardInterrupt:
         print("Process terminated by user")
-        pi.spi_close(h_spi)
         #break
 
 
