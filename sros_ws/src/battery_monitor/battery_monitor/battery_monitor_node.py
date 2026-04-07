@@ -7,14 +7,14 @@ import rclpy
 from rclpy.node import Node
 
 #Import relevant message type for battery-info topic
-from battery_monitor.msg import battery_info
+from shoebot_interfaces.msg import BatteryInfo
 
 class BatteryMonitor(Node):
 
     def __init__(self):
         super().__init__('battery-monitor')
         #TODO: Create publisher to battery-info topic, decide on message format
-        self.publisher_ = self.create_publisher(battery_info, 'battery-info', 10)
+        self.publisher_ = self.create_publisher(BatteryInfo, 'battery-info', 10)
         self.pin_to_read = 0
         timer_freq = 10.0 #Hz
         timer_period = 1.0 / timer_freq

@@ -3,8 +3,6 @@
 import RPi.GPIO as GPIO
 import spidev
 
-from spi_driver.msg import SPIFrame
-
 
 class ShiftRegister:
 
@@ -23,10 +21,6 @@ class ShiftRegister:
 
         #Disable outputs by default until our first write
         GPIO.output(self.oe_pin, 1)
-
-        #index variable for data bitarray and flag to mark when message is sent
-        self.bit_index = 0
-        self.done_sending = False
         
         
     def write(self, data:int):
@@ -138,27 +132,14 @@ class DeviceInterface:
     """
     Holds the internal state of each connected device
     """
-    def __init__(self, node, path_id, channel, status="inactive", id = None):
+    def __init__(self, path_id, channel, status="inactive", id = None, comms_rate = 3200):
 
         self.status = status
         self.prev_status = status
-        self.node = node
         self.path_id = path_id
         self.channel = channel
         self.id = id
-
-        self.publisher = None
-        self.subscriber = None
-    
-    def activate(self):
-        self.publisher = self.node.create_publisher(SPIFrame, f"path_{self.path_id}/data", 10)
-        self.subscriber = self.node.create_subscription(SPIFrame, f"path_{self.path_id}/cmd", self.cmd_callback, 10)
-
-    def deactivate(self):
-        if self.publisher and self.subscriber:
-            self.node.destroy_publisher(self.publisher)
-            self.node.destroy_subscriber(self.subscriber)
-            self.publisher = None
-            self.subscriber = None
+        self.num_faults = 0
+        self.comms_rate = comms_rate
 
 

@@ -2,12 +2,13 @@
 import rclpy
 from rclpy.node import Node
 
+from shoebot_interfaces.msg import BatteryInfo, cmdFrame
 
 class ShoeBotNode(Node):
 
     def __init__(self):
         super().__init__('shoebot_node')
-        self.battery_subscriber = self.create_subscription(battery_info, 'battery-info', self.battery_callback, 10)
+        self.battery_subscriber = self.create_subscription(BatteryInfo, 'battery-info', self.battery_callback, 10)
 
 
     def battery_callback(self, msg):
