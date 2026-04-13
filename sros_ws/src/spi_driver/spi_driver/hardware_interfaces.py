@@ -1,5 +1,5 @@
 
-
+#TODO: Try out gpiod. This is the current implementation using RPi.GPIO, which is simpler to set up.
 import RPi.GPIO as GPIO
 import spidev
 
@@ -120,7 +120,11 @@ class Harness:
 		#Enable the bus if it isn't already active
 		self.enable_bus(channel, rate)
 
-		rx = self.spi.xfer(data)
+        try:
+		    rx = self.spi.xfer(data)
+        except Exception as e:
+            self.disable_bus()
+            raise e
 
 		#Pulse CS high at end of transaction
 		self.toggle_cs(8)
@@ -141,5 +145,6 @@ class DeviceInterface:
         self.id = id
         self.num_faults = 0
         self.comms_rate = comms_rate
+        self.cmd = [0x00, 0x00]
 
 

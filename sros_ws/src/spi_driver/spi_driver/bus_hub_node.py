@@ -6,7 +6,8 @@ from rclpy.node import Node
 #Import dependencies from hardware_interfaces
 from hardware_interfaces import DeviceInterface, Harness
 
-from shoebot_interfaces.msg import BusState, cmdFrame
+#Import custome interfaces
+from shoebot_interfaces.msg import BusState, ActuatorCmdFrame
 from shoebot_interfaces.srv import ConfigUpdate
 
 class BusManager():
@@ -18,8 +19,10 @@ class BusManager():
         self.spi = Harness()
         self.channel = 0
         self.node = node
-        self.cmd = [0x00, 0x00] #Placeholder command data, to be updated by incoming messages from ShoeBot node
         self.devices = {path_id:DeviceInterface(path_id, self.channel) for path_id in range(self.num_paths)}
+        self.device_ids = [None] * self.num_paths
+        self.active_paths = [False] * self.num_paths
+        self.prev_active_paths = self.active_paths.copy()
 
     def who_are_you_handshake(self, path_id):
 
@@ -28,7 +31,12 @@ class BusManager():
 
         #Perform the handshake
         handshake_message = self.frame_message(path_id, 0x00, [0x00, 0x00]) #Device ID is 0 for handshake, data is just padding
-        response = self.spi.transfer(path_id, handshake_message, self.channel, discovery_rate) #Send handshake_message and get response
+        response = []
+        try:
+            response = self.spi.transfer(path_id, handshake_message, self.channel, discovery_rate)
+        except Exception as e:
+            self.node.get_logger().error(f"SPI transfer failed on path {path_id}: {e}")
+            return None
 
         #Disable the bus, freeing it for other activities
         self.spi.disable_bus()
@@ -54,6 +62,8 @@ class BusManager():
             if device_id:
                 self.node.get_logger().info(f"Device discovered on path {device.path_id} with ID {device_id}")
                 device.status = "active"
+                self.active_paths[device.path_id] = True
+                self.device_ids[device.path_id] = device_id
                 device.id = device_id
                 device.comms_rate = self.comms_rate
 
@@ -62,7 +72,7 @@ class BusManager():
         path_id = cmd_data[0] & 0x7
 
         #If the checksum fails, this could indicate a fault in the communication or the device. If the checksum is correct but the path_id or device_id doesn't match, this could indicate a mismatch in the expected response, which may also suggest a fault.
-        if response_data[5] != self.compute_checksum(cmd_data[:-1]):
+        if response_data[5] != self.compute_checksum(response_data[1:-1]):
             self.node.get_logger().warn(f"Checksum failure detected in response: {response_data}")
             
             #If the checksum is 0xFF but this is not expected for the response values, internal fault on device may be indicated
@@ -104,6 +114,8 @@ class BusManager():
         msg.path_active = [False] * self.num_paths
         msg.device_ids = [0] * self.num_paths
         msg.device_data = [0] * (self.num_paths * 2)
+        #Update the previous active device list
+        self.prev_active_paths = self.active_paths.copy()
 
         for path_id, device in self.devices.items():   
             if device.status != device.prev_status:
@@ -112,12 +124,21 @@ class BusManager():
 
             else:
                 if device.status == "active":
-                    sent_packet = self.frame_message(path_id, device.id, self.cmd)
-                    response = self.spi.transfer(path_id, sent_packet, device.channel, device.comms_rate)
+                    sent_packet = self.frame_message(path_id, device.id, device.cmd)
+                    response = [0xCF, path_id] + [0x00] * 3 + [0xFF] #Default response in case of failure, with recognizable invalid checksum and path_id for debugging
+                    try:
+                        response = self.spi.transfer(path_id, sent_packet, device.channel, device.comms_rate)
+                    except Exception as e:
+                        self.node.get_logger().error(f"SPI transfer failed on path {path_id}: {e}")
+                        self.check_fault_threshold(device)
+                        continue
+
                     #Populate msg with data from response if no faults.
                     if self.detect_fault(sent_packet, response, device):
+                        self.active_paths[path_id] = False
                         self.node.get_logger().warn(f"Fault detected on path {path_id}")
                     else:
+                        self.active_paths[path_id] = True
                         msg.path_active[path_id] = True
                         msg.device_ids[path_id] = device.id
                         msg.device_data[path_id*2:path_id*2+2] = response[3:5] #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
@@ -138,19 +159,45 @@ class BusHubNode(Node):
         for path_id, device in self.bus.devices.items():
             self.bus.discover_device(device)
 
+        self.config_client = self.create_client(ConfigUpdate, "shoebot/config_update")
+
         #Create a timer and timer callback that polls each device periodically
-        self.bus_publisher = self.create_publisher(BusState, "bus_state", 10)
-        timer_period = 0.001 # seconds
-        self.timer = self.create_timer(timer_period, self.bus.poll_devices)
+        self.bus_publisher = self.create_publisher(BusState, "shoebot/bus_state", 10)
+        timer_freq = 1000. #Hz
+        timer_period = 1. / timer_freq # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
 
         #Create a subscriber that listens for commands from the ShoeBot node
-        self.cmd_subscriber = self.create_subscription(cmdFrame, "shoebot/cmd", self.cmd_callback, 10)
+        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "shoebot/cmd", self.cmd_callback, 10)
 
+    def timer_callback(self):
+        self.bus.poll_devices()
+        self.detect_config_change()
     
     def cmd_callback(self, msg):
-        # Handle the incoming command message
 
-        raise NotImplementedError
+        for path in range(self.bus.num_paths):
+            #Extract the command data for this path from the message, and update the bus manager's cmd attribute
+            cmd_data = msg.cmd_data[path*2:path*2+2] #Assuming each path has 2 bytes of command data, may need to be updated based on actual message format
+            self.bus.devices[path].cmd = cmd_data
+
+    def detect_config_change(self):
+
+        if self.bus.active_paths != self.bus.prev_active_paths:
+            request = ConfigUpdate.Request()
+            request.active_paths = self.bus.active_paths
+            request.device_ids = self.bus.device_ids
+            future = self.config_client.call_async(request)
+            future.add_done_callback(self.config_update_callback)
+
+    def config_update_callback(self, future):
+        try:
+            result = future.result()
+            self.get_logger().info(f"Config update response: {result.config_name}")
+        except Exception as e:
+            self.get_logger().error(f"Config update service call failed: {e}")
+
+
 
 
 def main(args = None):
