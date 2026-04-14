@@ -86,7 +86,6 @@ class ShoeBotNode(Node):
     def bus_callback(self, msg):
         
         self.last_feedback = msg
-    
 
     def control_loop(self):
 
