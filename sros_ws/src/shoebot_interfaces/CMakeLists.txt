@@ -11,9 +11,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BatteryInfo.msg"
-  "msg/cmdFrame.msg"
-  "msg/DeviceData.msg"
-  "msg/SPIFrame.msg"
+  "msg/ActuatorCmdFrame.msg"
+  "msg/BusState.msg"
   "srv/ConfigUpdate.srv"
 )
 

@@ -1,18 +1,25 @@
 
 from .Module import Module
+from geometry_msgs.msg import Twist
 
 class Echo(Module):
 
-    def __init__(self):
+    def __init__(self, node, active_paths, device_ids):
         super().__init__()
-        raise NotImplementedError
 
-    def get_commands_from_vel(self, vel_cmd):
-        #Doesn't actually compute anything, packages the vel_cmd as a pair of bytes, sends to all active paths
+    def fetch_commands(self, vel_cmd: Twist, feedback:list) -> list:
+        #Package the magnitudes of linear and angular vels as a pair of bytes, sends to all nodes
+        linear_vel = int(self.compute_amplitude(vel_cmd.linear.x, vel_cmd.linear.y, vel_cmd.linear.z))
+        angular_vel = int(self.compute_amplitude(vel_cmd.angular.x, vel_cmd.angular.y, vel_cmd.angular.z))
 
-        pass
+        return [linear_vel, angular_vel] * 6
 
-    def get_vel_from_commands(self, commands:list):
+    def compute_received(self, active_paths, device_ids, device_data):
 
         #Returns the 2-byte integer value sent to each module
-        return (commands[0] << 8) | commands[1]
+        #TODO: Repackage into a format compatible with a Twist message
+        return (device_data[0] << 8) | device_data[1]
+
+    def compute_amplitude(x, y, z):
+
+        return (x ** 2 + y ** 2 + z ** 2) ** 0.5

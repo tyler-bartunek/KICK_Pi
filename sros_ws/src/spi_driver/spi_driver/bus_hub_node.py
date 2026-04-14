@@ -111,7 +111,7 @@ class BusManager():
     def poll_devices(self):
 
         msg = BusState()
-        msg.path_active = [False] * self.num_paths
+        msg.active_paths = [False] * self.num_paths
         msg.device_ids = [0] * self.num_paths
         msg.device_data = [0] * (self.num_paths * 2)
         #Update the previous active device list
@@ -139,7 +139,7 @@ class BusManager():
                         self.node.get_logger().warn(f"Fault detected on path {path_id}")
                     else:
                         self.active_paths[path_id] = True
-                        msg.path_active[path_id] = True
+                        msg.active_paths[path_id] = True
                         msg.device_ids[path_id] = device.id
                         msg.device_data[path_id*2:path_id*2+2] = response[3:5] #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
                 else:
@@ -163,7 +163,7 @@ class BusHubNode(Node):
 
         #Create a timer and timer callback that polls each device periodically
         self.bus_publisher = self.create_publisher(BusState, "shoebot/bus_state", 10)
-        timer_freq = 1000. #Hz
+        timer_freq = 500. #Hz
         timer_period = 1. / timer_freq # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
