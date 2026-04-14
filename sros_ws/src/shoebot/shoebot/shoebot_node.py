@@ -11,7 +11,7 @@ from std_msgs.msg import String, geometry_msgs.msg.Twist
 from shoebot_interfaces.srv import ConfigUpdate
 
 #Configuration files for different kinematic configurations
-from .configuration_files import Echo, Wheels
+from configuration_files import CONFIGURATIONS, PARTIAL_CONFIGURATIONS
 
 class ShoeBotNode(Node):
 
@@ -44,6 +44,19 @@ class ShoeBotNode(Node):
         #TODO: Handle incoming velocity command, and decide how to send it to the motor controller
 
         pass
+
+    def lookup_configuration(self, active_paths, device_ids):
+        
+        key = frozenset(d for d in device_ids if d is not None)
+
+        if key in CONFIGURATIONS:
+            config_class = CONFIGURATIONS[key]
+            self.config = config_class(active_paths, device_ids)
+            self.get_logger().info(f"Loaded configuration: {config_class.__name__}")
+        elif key in PARTIAL_CONFIGURATIONS:
+            self.get_logger().warn(f"Partial configuration detected: {PARTIAL_CONFIGURATIONS[key]}")
+        else:
+            self.get_logger().error(f"Unrecognized device configuration: {key}")
 
     def config_update_callback(self, response):
         #TODO: Handle incoming configuration update request, and decide how to update the kinematic configuration and respond to the service call
