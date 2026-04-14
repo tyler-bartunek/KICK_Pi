@@ -210,7 +210,10 @@ def main(args = None):
     #TODO: Check if the spin_until_future_complete makes more sense here
     rclpy.spin(bus_hub)
 
+    #Release the chip and request objects, as well as the spi kernel
+    bus_hub.bus.reg.cleanup()
     bus_hub.bus.spi.disable_bus()
+    #Shutdown ROS stuff
     bus_hub.destroy_node()
     rclpy.shutdown()
 

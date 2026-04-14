@@ -1,63 +1,63 @@
-import RPi.GPIO as GPIO
+import gpiod
+from gpiod.line import Direction, Value
 
 class ShiftRegister:
-    
+
     def __init__(self, data_pin:int, latch_pin:int, sck_pin:int, oe_pin:int):
         
+        #Hard-coding likely not ideal, but compromise until we know more about
+        #how this plays with ROS.
         self.data_pin = data_pin
         self.latch_pin = latch_pin
         self.sck_pin = sck_pin
         self.oe_pin = oe_pin
         
         #Configure GPIO pins
-        GPIO.setmode(GPIO.BCM)
+        self.chip = gpiod.Chip("/dev/gpiochip0")
         self.connect_pins()
 
         #Disable outputs by default until our first write
-        GPIO.output(self.oe_pin, 1)
-
-        #index variable for data bitarray and flag to mark when message is sent
-        self.bit_index = 0
-        self.done_sending = False
+        self.request.set_value(self.oe_pin, Value.ACTIVE)
         
         
     def write(self, data:int):
         
         #Set data attribute for use in callback function
         self.data_list = self.to_bitarray(data)
+
+        active_inactive_map = {0: Value.INACTIVE, 1: Value.ACTIVE}
         
         #Pull latch low for shift
-        GPIO.output(self.latch_pin, 0)
+        self.request.set_value(self.latch_pin, Value.INACTIVE)
         
         #Send data bit by bit to the shift register
         for bit in self.data_list:
-            GPIO.output(self.data_pin, bit)
-            GPIO.output(self.sck_pin, 1)
-            GPIO.output(self.sck_pin, 0)
+            self.request.set_value(self.data_pin, active_inactive_map[bit])
+            self.request.set_value(self.sck_pin, Value.ACTIVE)
+            self.request.set_value(self.sck_pin, Value.INACTIVE)
 
         #Enable outputs, shift values to storage register and outputs
-        GPIO.output(self.latch_pin, 1)
-        GPIO.output(self.oe_pin, 0)
+        self.request.set_value(self.latch_pin, Value.ACTIVE)
+        self.request.set_value(self.oe_pin, Value.INACTIVE)
 
     
     def connect_pins(self) -> None:
 
-        GPIO.setup(self.data_pin, GPIO.OUT)
-        GPIO.setup(self.latch_pin, GPIO.OUT)
-        GPIO.setup(self.sck_pin, GPIO.OUT)
-        GPIO.setup(self.oe_pin, GPIO.OUT)
+        self.request = self.chip.request_lines(consumer = "shift_register", 
+                                               config = {
+                                                (self.data_pin, self.latch_pin, self.sck_pin, self.oe_pin): gpiod.LineSettings(
+                                               direction = Direction.OUTPUT,
+                                               output_value = Value.INACTIVE)
+                                               }
+                                              )
 
-        return None
-            
-    # def rising_edge_callback(self, gpio, level, tick):
-        
-    #     if self.bit_index < len(self.data_list):
-    #         self.pi.write(self.data_pin, self.data_list[self.bit_index])
-    #         print("Writing {}".format(self.data_list[self.bit_index]))
-    #         self.bit_index += 1
-    #     else:
-    #         self.done_sending = True
-    #         self.pi.write(self.latch_pin, 1)      
+        return None   
+
+    def cleanup(self):
+
+        if self.request and self.chip:
+            self.request.release()
+            self.chip.close()  
              
     def to_bitarray(self, data:int) -> list:
         

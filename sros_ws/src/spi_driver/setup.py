@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools', 'spidev', 'RPi.GPIO', 'shoebot_interfaces'],
+    install_requires=['setuptools'],
     zip_safe=True,
     maintainer='tyler',
     maintainer_email='tylerbartunek@gmail.com',
