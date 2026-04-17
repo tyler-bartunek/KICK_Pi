@@ -24,7 +24,7 @@ class DummyBattery(Node):
         msg.voltage = 3.3
         self.publisher_.publish(msg)
 
-def main():
+def main(args = None):
 
     rclpy.init(args = args)
 
