@@ -28,7 +28,8 @@ class ShoeBotNode(Node):
 
         #Create control loop parameters
         timer_freq = 100.0  # Hz, subject to Pi 3B+ reality
-        self.timer = self.create_timer(1.0 / timer_freq, self.control_loop)
+        self.timer_period = 1 / timer_freq
+        self.timer = self.create_timer(self.timer_period, self.control_loop)
 
         #Create the subscriber to the battery monitoring topic
         self.battery_subscriber = self.create_subscription(BatteryInfo, 'battery-info', self.battery_callback, 10)
