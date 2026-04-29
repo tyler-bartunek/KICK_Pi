@@ -4,16 +4,16 @@ import rclpy
 from rclpy.node import Node
 
 #Topic message formats
-from shoebot_interfaces.msg import BatteryInfo, ActuatorCmdFrame, BusState
+from kickbot_interfaces.msg import BatteryInfo, ActuatorCmdFrame, BusState
 from geometry_msgs.msg import Twist
 
 #Service message formats
-from shoebot_interfaces.srv import ConfigUpdate
+from kickbot_interfaces.srv import ConfigUpdate
 
 #Configuration files for different kinematic configurations
-from kinematic_config_setter import CONFIGURATIONS, PARTIAL_CONFIGURATIONS
+from configuration_files import CONFIGURATIONS, PARTIAL_CONFIGURATIONS
 
-class ShoeBotNode(Node):
+class KickbrainNode(Node):
 
     def __init__(self):
         super().__init__('shoebot_node')
@@ -35,16 +35,16 @@ class ShoeBotNode(Node):
         self.battery_subscriber = self.create_subscription(BatteryInfo, 'battery-info', self.battery_callback, 10)
 
         #Create the subscriber to the motion_plan topic, notably velocity commands
-        self.vel_subscriber = self.create_subscription(Twist, 'shoebot/cmd_vel', self.vel_callback, 10)
+        self.vel_subscriber = self.create_subscription(Twist, 'kickbot/cmd_vel', self.vel_callback, 10)
 
         #Create the subscriber to the bus state topic
-        self.bus_subscriber = self.create_subscription(BusState, 'shoebot/bus_state', self.bus_callback, 10)
+        self.bus_subscriber = self.create_subscription(BusState, 'kickbot/bus_state', self.bus_callback, 10)
 
         #Create service server for configuration updates
-        self.config_server = self.create_service(ConfigUpdate, 'shoebot/config_update', self.config_update_callback)
+        self.config_server = self.create_service(ConfigUpdate, 'kickbot/config_update', self.config_update_callback)
 
         #Create publisher for actuator command topic
-        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'shoebot/cmd', 10)
+        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'kickbot/cmd', 10)
 
     def config_ready(self) -> bool:
         if not self.config:
@@ -111,9 +111,9 @@ def main(args = None):
 
     rclpy.init(args = args)
 
-    shoebot_node = ShoeBotNode()
+    kickbrain_node = KickbrainNode()
 
-    rclpy.spin(shoebot_node)
+    rclpy.spin(kickbrain_node)
 
-    shoebot_node.destroy_node()
+    kickbrain_node.destroy_node()
     rclpy.shutdown()

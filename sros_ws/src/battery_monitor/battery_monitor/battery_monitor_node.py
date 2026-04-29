@@ -7,7 +7,7 @@ import rclpy
 from rclpy.node import Node
 
 #Import relevant message type for battery-info topic
-from shoebot_interfaces.msg import BatteryInfo
+from kickbot_interfaces.msg import BatteryInfo
 
 class BatteryMonitor(Node):
 

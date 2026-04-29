@@ -7,10 +7,10 @@ from rclpy.node import Node
 from bus_manager import BusManager
 
 #Import custom interfaces
-from shoebot_interfaces.msg import BusState, ActuatorCmdFrame
+from kickbot_interfaces.msg import BusState, ActuatorCmdFrame
 
 
-class BusHubNode(Node):
+class EchoTestHubNode(Node):
 
     def __init__(self):
         super().__init__("test_hub")
@@ -22,13 +22,13 @@ class BusHubNode(Node):
 
 
         #Create a timer and timer callback that polls each device periodically
-        self.bus_publisher = self.create_publisher(BusState, "shoebot/bus_state", 10)
+        self.bus_publisher = self.create_publisher(BusState, "kickbot/bus_state", 10)
         timer_freq = 100. #Hz
         timer_period = 1. / timer_freq # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        #Create a subscriber that listens for commands from the ShoeBot node
-        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "shoebot/cmd", self.cmd_callback, 10)
+        #Create a subscriber that listens for commands from the KickBot node
+        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "kickbot/cmd", self.cmd_callback, 10)
 
     def timer_callback(self):
         self.bus.poll_devices()
@@ -49,16 +49,16 @@ def main(args = None):
     #Start the client library
     rclpy.init(args = args)
 
-    test_hub = TestHubNode()
+    echo_test_hub = EchoTestHubNode()
 
     #TODO: Check if the spin_until_future_complete makes more sense here
-    rclpy.spin(test_hub)
+    rclpy.spin(echo_test_hub)
 
     #Release the chip and request objects, as well as the spi kernel
-    bus_hub.bus.reg.cleanup()
-    bus_hub.bus.spi.disable_bus()
+    echo_test_hub.bus.reg.cleanup()
+    echo_test_hub.bus.spi.disable_bus()
     #Shutdown ROS stuff
-    bus_hub.destroy_node()
+    echo_test_hub.destroy_node()
     rclpy.shutdown()
 
 

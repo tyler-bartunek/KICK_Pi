@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'shoebot'
+package_name = 'kickbrain'
 
 setup(
     name=package_name,
@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='tyler',
     maintainer_email='tylerbartunek@gmail.com',
-    description='Main node for monitoring ShoeBot state and behavior',
+    description='Main node for monitoring Kick Robot state and behavior',
     license='Apache-2.0',
     extras_require={
         'test': [
@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'shoebot = shoebot.shoebot_node:main',
+            'kickbrain = kickbrain.kickbrain_node:main',
         ],
     },
 )

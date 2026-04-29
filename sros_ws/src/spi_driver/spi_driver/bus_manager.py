@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 #Import custom interfaces
-from shoebot_interfaces.msg import BusState, ActuatorCmdFrame
+from kickbot_interfaces.msg import BusState, ActuatorCmdFrame
 
 #Import dependencies from hardware_interfaces
 from hardware_interfaces import DeviceInterface, Harness

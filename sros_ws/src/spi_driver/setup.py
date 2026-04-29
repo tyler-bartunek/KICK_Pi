@@ -25,7 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'spi_hub = spi_driver.bus_hub_node:main',
-            'test_hub = spi_driver.test_hub_node:main',
+            'echo_hub = spi_driver.echo_test_hub_node:main',
         ],
     },
 )

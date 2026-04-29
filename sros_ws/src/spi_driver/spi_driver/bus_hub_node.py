@@ -7,8 +7,8 @@ from rclpy.node import Node
 from bus_manager import BusManager
 
 #Import custom interfaces
-from shoebot_interfaces.msg import BusState, ActuatorCmdFrame
-from shoebot_interfaces.srv import ConfigUpdate
+from kickbot_interfaces.msg import BusState, ActuatorCmdFrame
+from kickbot_interfaces.srv import ConfigUpdate
 
 
 class BusHubNode(Node):
@@ -21,16 +21,16 @@ class BusHubNode(Node):
         for path_id, device in self.bus.devices.items():
             self.bus.discover_device(device)
 
-        self.config_client = self.create_client(ConfigUpdate, "shoebot/config_update")
+        self.config_client = self.create_client(ConfigUpdate, "kickbot/config_update")
 
         #Create a timer and timer callback that polls each device periodically
-        self.bus_publisher = self.create_publisher(BusState, "shoebot/bus_state", 10)
+        self.bus_publisher = self.create_publisher(BusState, "kickbot/bus_state", 10)
         timer_freq = 500. #Hz
         timer_period = 1. / timer_freq # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
-        #Create a subscriber that listens for commands from the ShoeBot node
-        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "shoebot/cmd", self.cmd_callback, 10)
+        #Create a subscriber that listens for commands from the KickBot node
+        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "kickbot/cmd", self.cmd_callback, 10)
 
     def timer_callback(self):
         self.bus.poll_devices()

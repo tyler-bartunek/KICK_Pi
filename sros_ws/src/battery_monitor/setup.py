@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools', 'rclpy', 'python3-smbus2', 'python3-ADS1x15-ADC', 'shoebot_interfaces'],
+    install_requires=['setuptools', 'rclpy', 'python3-smbus2', 'python3-ADS1x15-ADC', 'kickbot_interfaces'],
     zip_safe=True,
     maintainer='root',
     maintainer_email='tylerbartunek@gmail.com',
