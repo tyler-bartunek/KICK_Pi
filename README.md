@@ -1,4 +1,4 @@
-# KICK Pi <img src="images/Logo.png" alt="ShoeBot Logo" width="150" align = "right"/>
+# KICK Pi <img src="images/Updated_KICK_logo.png" alt="KICK Logo" width="550" align = "right"/>
 
 &nbsp;
 &nbsp;
