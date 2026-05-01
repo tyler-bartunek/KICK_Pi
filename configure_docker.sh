@@ -1,7 +1,7 @@
 #!/bin/bash
 
-IMAGE_NAME="shoebot"
-CONTAINER_NAME="ShoeBot_container"
+IMAGE_NAME="kickbot"
+CONTAINER_NAME="Footlocker"
 WORKSPACE="/home/tyler/Documents/ShoeBot_Pi/sros_ws"
 
 # Check if image exists, build if not
