@@ -1,9 +1,10 @@
-from .Module import Module
+from .Configuration import Configuration
 
 from geometry_msgs.msg import Twist
 
-class Wheels(Module):
+class Wheels(Configuration):
 
+    #TODO: Correct these lists based on actual board location indexing
     X_CONFIG = [0x01, 0x02, 0x01, 0x02]
     O_CONFIG = [0x02, 0x01, 0x02, 0x01]
 

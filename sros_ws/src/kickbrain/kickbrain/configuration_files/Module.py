@@ -4,9 +4,9 @@ from geometry_msgs.msg import Twist
 
 import numpy as np
 
-#Base module, defines common behavior for all modules.
+#Base configuration class, defines common behavior for all configuration files.
 #Overwritten within inherited classes
-class Module(ABC):
+class Configuration(ABC):
 
     def __init__(self, node, active_paths, device_ids):
 

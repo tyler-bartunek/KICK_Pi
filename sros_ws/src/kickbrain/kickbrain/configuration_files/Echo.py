@@ -1,8 +1,8 @@
 
-from .Module import Module
+from .Configuration import Configuration
 from geometry_msgs.msg import Twist
 
-class Echo(Module):
+class Echo(Configuration):
 
     def __init__(self, node, active_paths, device_ids):
         super().__init__(node, active_paths, device_ids)

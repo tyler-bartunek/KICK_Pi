@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'kickbrain = kickbrain.kickbrain_node:main',
+            'test_echo = kickbrain.test_echo_node:main',
         ],
     },
 )

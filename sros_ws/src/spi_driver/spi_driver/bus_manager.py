@@ -148,3 +148,5 @@ class BusManager():
                         self.discover_device(device)
         #Publish the bus state message after polling all devices
         self.node.bus_publisher.publish(msg)
+        #Pulse the sync pin after each full poll cycle to synchronize any module behavior
+        self.spi.sync_pulse()
