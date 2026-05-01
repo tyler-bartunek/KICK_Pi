@@ -2,6 +2,8 @@ from .Configuration import Configuration
 
 from geometry_msgs.msg import Twist
 
+import numpy as np
+
 class Wheels(Configuration):
 
     #TODO: Correct these lists based on actual board location indexing

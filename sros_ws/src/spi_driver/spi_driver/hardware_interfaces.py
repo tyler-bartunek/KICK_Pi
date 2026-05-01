@@ -86,9 +86,16 @@ class Harness:
         self.reg = ShiftRegister()
         
         #SYNC pin, need to configure
-        SYNC_pin = 25
+        self.sync_pin = 25
         
-        self.reg.chip.get_line(SYNC_pin).request(consumer="harness_sync", type=gpiod.LineRequest.DIRECTION_OUTPUT, default_vals=[0])
+        self.sync_request = self.reg.chip.request_lines(
+        consumer="harness_sync",
+        config={
+            self.sync_pin: gpiod.LineSettings(
+                direction=Direction.OUTPUT,
+                output_value=Value.ACTIVE  # Active high by default, sync pulse pulls low
+            )
+        })
 
         #Initialize spi as None so enable bus logic works
         self.spi = None
@@ -151,8 +158,8 @@ class Harness:
     def sync_pulse(self):
 
         #Active low
-        self.reg.chip.set_value(self.sync_pin, Value.INACTIVE)
-        self.reg.chip.set_value(self.sync_pin, Value.ACTIVE)
+        self.sync_request.set_value(self.sync_pin, Value.INACTIVE)
+        self.sync_request.set_value(self.sync_pin, Value.ACTIVE)
 
 
 class DeviceInterface:

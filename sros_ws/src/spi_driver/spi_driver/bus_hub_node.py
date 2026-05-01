@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 
 
-from bus_manager import BusManager
+from .bus_manager import BusManager
 
 #Import custom interfaces
 from kickbot_interfaces.msg import BusState, ActuatorCmdFrame

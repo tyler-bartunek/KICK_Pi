@@ -2,8 +2,6 @@
 from abc import ABC, abstractmethod
 from geometry_msgs.msg import Twist
 
-import numpy as np
-
 #Base configuration class, defines common behavior for all configuration files.
 #Overwritten within inherited classes
 class Configuration(ABC):

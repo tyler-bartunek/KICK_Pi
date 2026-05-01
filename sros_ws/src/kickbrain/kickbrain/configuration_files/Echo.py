@@ -2,13 +2,14 @@
 from .Configuration import Configuration
 from geometry_msgs.msg import Twist
 
+
 class Echo(Configuration):
 
     def __init__(self, node, active_paths, device_ids):
         super().__init__(node, active_paths, device_ids)
 
 
-    def fetch_commands(self, vel_cmd:np.ndarray, feedback:list) -> list:
+    def fetch_commands(self, vel_cmd:Twist, feedback:list) -> list:
         #Package the magnitudes of linear and angular vels as a pair of bytes, sends to all nodes
         linear_vel = int(self.compute_amplitude(vel_cmd.linear.x, vel_cmd.linear.y, vel_cmd.linear.z))
         angular_vel = int(self.compute_amplitude(vel_cmd.angular.x, vel_cmd.angular.y, vel_cmd.angular.z))

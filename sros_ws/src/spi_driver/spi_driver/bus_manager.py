@@ -6,7 +6,7 @@ from rclpy.node import Node
 from kickbot_interfaces.msg import BusState, ActuatorCmdFrame
 
 #Import dependencies from hardware_interfaces
-from hardware_interfaces import DeviceInterface, Harness
+from .hardware_interfaces import DeviceInterface, Harness
 
 class BusManager():
 
@@ -114,7 +114,7 @@ class BusManager():
         msg = BusState()
         msg.active_paths = [False] * self.num_paths
         msg.device_ids = [0] * self.num_paths
-        msg.device_data = [0] * (self.num_paths * 2)
+        msg.device_data = bytearray([0] * (self.num_paths * 2))
         #Update the previous active device list
         self.prev_active_paths = self.active_paths.copy()
 
@@ -142,7 +142,7 @@ class BusManager():
                         self.active_paths[path_id] = True
                         msg.active_paths[path_id] = True
                         msg.device_ids[path_id] = device.id
-                        msg.device_data[path_id*2:path_id*2+2] = response[3:5] #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
+                        msg.device_data[path_id*2:path_id*2+2] = bytes(response[3:5]) #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
                 else:
                     if device.status == "inactive":
                         self.discover_device(device)
