@@ -145,7 +145,7 @@ class Harness:
         self.enable_bus(channel, rate)
         
         try:
-            rx = self.spi.xfer(data)
+            rx = self.spi.xfer(list(data))
         except Exception as e:
             self.disable_bus()
             raise e

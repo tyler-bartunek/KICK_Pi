@@ -7,8 +7,8 @@ import numpy as np
 class Wheels(Configuration):
 
     #TODO: Correct these lists based on actual board location indexing
-    X_CONFIG = [0x01, 0x02, 0x01, 0x02]
-    O_CONFIG = [0x02, 0x01, 0x02, 0x01]
+    X_CONFIG = [0x02, 0x03, 0x02, 0x03]
+    O_CONFIG = [0x03, 0x02, 0x03, 0x02]
 
     def __init__(self, node, active_paths, device_ids):
 
