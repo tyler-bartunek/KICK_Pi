@@ -138,20 +138,25 @@ class Harness:
 
         #open bus if not open, select line, send message, line high
 
-        #Select line
-        self.toggle_cs(line_id)
-
         #Enable the bus if it isn't already active
         self.enable_bus(channel, rate)
         
-        try:
-            rx = self.spi.xfer(list(data))
-        except Exception as e:
-            self.disable_bus()
-            raise e
+        #Initialize output buffer
+        rx = []
+        for byte in list(data):
+            
+            #Select line
+            self.toggle_cs(line_id)
+            
+            try:
+                rx_byte = self.spi.xfer([byte])
+                rx.extend(rx_byte)
+            except Exception as e:
+                self.disable_bus()
+                raise e
 
-        #Pulse CS high at end of transaction
-        self.toggle_cs(8)
+            #Pulse CS high at end of transaction
+            self.toggle_cs(8)
 
         return rx
     

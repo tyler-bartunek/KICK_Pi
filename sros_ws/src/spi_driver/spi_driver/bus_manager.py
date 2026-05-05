@@ -8,12 +8,14 @@ from kickbot_interfaces.msg import BusState, ActuatorCmdFrame
 #Import dependencies from hardware_interfaces
 from .hardware_interfaces import DeviceInterface, Harness
 
+# from time import sleep
+
 class BusManager():
 
     def __init__(self, node):
 
         self.num_paths = 6
-        self.comms_rate = 5e6
+        self.comms_rate = int(5e6)
         self.spi = Harness()
         self.channel = 0
         self.node = node
@@ -33,9 +35,10 @@ class BusManager():
         attempts = 0
         while ((response[0] & 0x7) != path_id) or (response[1] == 0x00):
             try:
-                self.node.get_logger().info(f"Attempting handshake on path {path_id}, with message {handshake_message}")
+                # self.node.get_logger().info(f"Attempting handshake on path {path_id}, with message {handshake_message}")
                 response = self.spi.transfer(path_id, handshake_message, self.channel, discovery_rate)
-                self.node.get_logger().info(f"Attempting connection on path {path_id}, received response: {response}")
+                # sleep(0.01) #Short delay to allow the device to process the handshake and respond, may need to be tuned based on actual device behavior
+                # self.node.get_logger().info(f"Attempting connection on path {path_id}, received response: {response}")
             except Exception as e:
                 self.node.get_logger().error(f"SPI transfer failed on path {path_id}: {e}")
                 return None
@@ -144,9 +147,12 @@ class BusManager():
                         msg.active_paths[path_id] = True
                         msg.device_ids[path_id] = device.id
                         msg.device_data[path_id*2:path_id*2+2] = response[3:5] #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
-                else:
-                    if device.status == "inactive":
+                elif (device.status == "inactive"):
                         self.discover_device(device)
+                elif (device.status == "fault"):
+                        self.check_fault_threshold(device)
+                        
+                        
         #Publish the bus state message after polling all devices
         self.node.bus_publisher.publish(msg)
         #Pulse the sync pin after each full poll cycle to synchronize any module behavior
