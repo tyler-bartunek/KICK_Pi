@@ -66,16 +66,9 @@ class TestEchoNode(Node):
     def config_update_callback(self, call, response):
 
         self.lookup_configuration(call.active_paths, call.device_ids)
-        response.config_name = self.kinematic_config
+        response.configuration = self.kinematic_config
 
         return response
-
-    def battery_callback(self, msg):
-        #TODO: Handle incoming battery status message, and decide how to warn the user and when to shut it down
-        if msg.voltage < self.battery_threshold:
-            self.get_logger().warn(f"Battery voltage low: {msg.voltage:.2f}V")
-
-        pass
 
     def cmd_timer_callback(self):
         
@@ -115,7 +108,7 @@ class TestEchoNode(Node):
         if self.desired_vel is None:
             return
 
-        commands = self.config.fetch_commands(self.desired_vel, self.last_bus_state)
+        commands = self.config.fetch_commands(self.desired_vel, self.last_feedback)
         msg = ActuatorCmdFrame()
         msg.cmd_data = commands
         self.actuator_cmd_publisher.publish(msg)

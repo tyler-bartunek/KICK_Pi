@@ -27,8 +27,10 @@ share/python-wheels/
 MANIFEST
 
 #ROS stuff
-install/
-log/
+sros_ws/build/
+sros_ws/install/
+sros_ws/log/
+sros_ws/launch/core
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

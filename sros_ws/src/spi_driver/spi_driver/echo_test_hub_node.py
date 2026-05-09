@@ -8,6 +8,8 @@ from .bus_manager import BusManager
 
 #Import custom interfaces
 from kickbot_interfaces.msg import BusState, ActuatorCmdFrame
+#Service message formats
+from kickbot_interfaces.srv import ConfigUpdate
 
 
 class EchoTestHubNode(Node):
@@ -29,8 +31,11 @@ class EchoTestHubNode(Node):
 
         #Create a subscriber that listens for commands from the KickBot node
         self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "kickbot/cmd", self.cmd_callback, 10)
+        
+        self.config_client = self.create_client(ConfigUpdate, "kickbot/config_update")
 
     def timer_callback(self):
+        self.detect_config_change()
         self.bus.poll_devices()
     
     def cmd_callback(self, msg):
@@ -38,7 +43,23 @@ class EchoTestHubNode(Node):
         for path in range(self.bus.num_paths):
             #Extract the command data for this path from the message, and update the bus manager's cmd attribute
             cmd_data = msg.cmd_data[path*2:path*2+2] #Assuming each path has 2 bytes of command data, may need to be updated based on actual message format
-            self.bus.devices[path].cmd = cmd_data
+            self.bus.devices[path].cmd = [int(cmd) for cmd in cmd_data] #Not ideal, but I can't have these np.uint8's floating around
+            
+    def detect_config_change(self):
+
+        if self.bus.active_paths != self.bus.prev_active_paths:
+            request = ConfigUpdate.Request()
+            request.active_paths = self.bus.active_paths
+            request.device_ids = self.bus.device_ids
+            future = self.config_client.call_async(request)
+            future.add_done_callback(self.config_update_callback)
+
+    def config_update_callback(self, future):
+        try:
+            result = future.result()
+            self.get_logger().info(f"Config update response: {result.configuration}")
+        except Exception as e:
+            self.get_logger().error(f"Config update service call failed: {e}")
 
 
 

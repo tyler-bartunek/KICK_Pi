@@ -20,7 +20,7 @@ class BusManager():
         self.channel = 0
         self.node = node
         self.devices = {path_id:DeviceInterface(path_id, self.channel) for path_id in range(self.num_paths)}
-        self.device_ids = [None] * self.num_paths
+        self.device_ids = [0] * self.num_paths
         self.active_paths = [False] * self.num_paths
         self.prev_active_paths = self.active_paths.copy()
 
@@ -41,12 +41,12 @@ class BusManager():
                 # self.node.get_logger().info(f"Attempting connection on path {path_id}, received response: {response}")
             except Exception as e:
                 self.node.get_logger().error(f"SPI transfer failed on path {path_id}: {e}")
-                return None
+                return 0
 
             attempts += 1
 
             if attempts > 9:
-                return None #No device on this path
+                return 0 #No device on this path
 
         #Disable the bus, freeing it for other activities
         self.spi.disable_bus()
@@ -56,6 +56,7 @@ class BusManager():
     
     def frame_message(self, path_id, device_id, data:list):
         path_header = 0xF0 | (path_id & 0x7) #First four bits are 1111, rest are path_id
+        #Check data type of data element values
         message_data = [0xBF,path_header, device_id] + data + [self.compute_checksum([path_header, device_id] + data)]
         return message_data
 
@@ -64,7 +65,7 @@ class BusManager():
         if device.status == "inactive":
             device_id = self.who_are_you_handshake(device.path_id)
 
-            if device_id:
+            if device_id != 0:
                 self.node.get_logger().info(f"Device discovered on path {device.path_id} with ID {device_id}")
                 device.status = "active"
                 self.active_paths[device.path_id] = True
@@ -92,7 +93,7 @@ class BusManager():
             self.check_fault_threshold(device)
             self.node.get_logger().warn(f"Path ID mismatch in response on path: {response_data, path_id}")
             return True
-        elif response_data[1] != device.id:
+        elif (response_data[1] != device.id) or (response_data[1] == 0x00):
             self.check_fault_threshold(device)
             self.node.get_logger().warn(f"Device ID mismatch in response on path: {response_data, path_id}")
             return True
@@ -147,6 +148,7 @@ class BusManager():
                         msg.active_paths[path_id] = True
                         msg.device_ids[path_id] = device.id
                         msg.device_data[path_id*2:path_id*2+2] = response[3:5] #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
+                        self.node.get_logger().info(f"Successful communication on path {path_id}, sent data: {sent_packet}, received data: {response}")
                 elif (device.status == "inactive"):
                         self.discover_device(device)
                 elif (device.status == "fault"):

@@ -69,7 +69,7 @@ class KickbrainNode(Node):
     def config_update_callback(self, call, response):
 
         self.lookup_configuration(call.active_paths, call.device_ids)
-        response.config_name = self.kinematic_config
+        response.configuration = self.kinematic_config
 
         return response
 
@@ -95,7 +95,7 @@ class KickbrainNode(Node):
         if self.desired_vel is None:
             return
 
-        commands = self.config.fetch_commands(self.desired_vel, self.last_bus_state)
+        commands = self.config.fetch_commands(self.desired_vel, self.last_feedback)
         msg = ActuatorCmdFrame()
         msg.cmd_data = commands
         self.actuator_cmd_publisher.publish(msg)

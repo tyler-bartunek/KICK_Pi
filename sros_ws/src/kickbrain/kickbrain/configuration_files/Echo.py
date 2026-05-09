@@ -11,8 +11,8 @@ class Echo(Configuration):
 
     def fetch_commands(self, vel_cmd:Twist, feedback:list) -> list:
         #Package the magnitudes of linear and angular vels as a pair of bytes, sends to all nodes
-        linear_vel = int(self.compute_amplitude(vel_cmd.linear.x, vel_cmd.linear.y, vel_cmd.linear.z))
-        angular_vel = int(self.compute_amplitude(vel_cmd.angular.x, vel_cmd.angular.y, vel_cmd.angular.z))
+        linear_vel = int(round(self.compute_amplitude(vel_cmd.linear.x, vel_cmd.linear.y, vel_cmd.linear.z))) % 256
+        angular_vel = int(round(self.compute_amplitude(vel_cmd.angular.x, vel_cmd.angular.y, vel_cmd.angular.z))) % 256
 
         return [linear_vel, angular_vel] * 6
 
@@ -27,6 +27,6 @@ class Echo(Configuration):
 
         return self.dict_to_twist(return_dict)
 
-    def compute_amplitude(x, y, z):
+    def compute_amplitude(self, x, y, z):
 
         return (x ** 2 + y ** 2 + z ** 2) ** 0.5

@@ -33,8 +33,8 @@ class BusHubNode(Node):
         self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "kickbot/cmd", self.cmd_callback, 10)
 
     def timer_callback(self):
-        self.bus.poll_devices()
         self.detect_config_change()
+        self.bus.poll_devices()
     
     def cmd_callback(self, msg):
 
@@ -55,7 +55,7 @@ class BusHubNode(Node):
     def config_update_callback(self, future):
         try:
             result = future.result()
-            self.get_logger().info(f"Config update response: {result.config_name}")
+            self.get_logger().info(f"Config update response: {result.configuration}")
         except Exception as e:
             self.get_logger().error(f"Config update service call failed: {e}")
 
