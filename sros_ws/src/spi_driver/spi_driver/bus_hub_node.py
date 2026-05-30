@@ -40,8 +40,8 @@ class BusHubNode(Node):
 
         for path in range(self.bus.num_paths):
             #Extract the command data for this path from the message, and update the bus manager's cmd attribute
-            cmd_data = msg.cmd_data[path*2:path*2+2] #Assuming each path has 2 bytes of command data, may need to be updated based on actual message format
-            self.bus.devices[path].cmd = cmd_data
+            cmd_data = msg.cmd_data[path*4:path*4+4] #Assuming each path has 4 bytes of command data, may need to be updated based on actual message format
+            self.bus.devices[path].cmd = [int(cmd) for cmd in cmd_data] #Not ideal, but I can't have these np.uint8's floating around
 
     def detect_config_change(self):
 

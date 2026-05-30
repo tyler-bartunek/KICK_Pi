@@ -180,6 +180,6 @@ class DeviceInterface:
         self.id = id
         self.num_faults = 0
         self.comms_rate = comms_rate
-        self.cmd = [0x00, 0x00]
+        self.cmd = [0x00, 0x00, 0x00, 0x00]
 
 

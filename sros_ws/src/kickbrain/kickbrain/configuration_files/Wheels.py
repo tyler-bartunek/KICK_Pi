@@ -41,7 +41,7 @@ class Wheels(Configuration):
 
         if not self.jacobian:
             self.node.get_logger().warn("Jacobian not set, cannot compute commands")
-            return [0] * 12  # Safe zero command
+            return [0] * 24  # Safe zero command
 
         #Map velocity command and feedback to a 6x1 array, compute the difference
         cmd_vel_array = self.vel_to_array(vel_cmd)

@@ -30,8 +30,8 @@ class BusManager():
         discovery_rate = 32000
 
         #Perform the handshake, attempt it 10 times
-        handshake_message = self.frame_message(path_id, 0x00, [0x00, 0x00]) #Device ID is 0 for handshake, data is just padding
-        response = [0xFF] * 6
+        handshake_message = self.frame_message(path_id, 0x00, [0x00, 0x00, 0x00, 0x00]) #Device ID is 0 for handshake, data is just padding
+        response = [0xFF] * 8
         attempts = 0
         while ((response[0] & 0x7) != path_id) or (response[1] == 0x00):
             try:
@@ -78,11 +78,11 @@ class BusManager():
         path_id = cmd_data[1] & 0x7
 
         #If the checksum fails, this could indicate a fault in the communication or the device. If the checksum is correct but the path_id or device_id doesn't match, this could indicate a mismatch in the expected response, which may also suggest a fault.
-        if response_data[4] != self.compute_checksum(response_data[0:-2]):
+        if response_data[6] != self.compute_checksum(response_data[0:-2]):
             self.node.get_logger().warn(f"Checksum failure detected in response: {response_data}")
             
             #If the checksum is 0xFF but this is not expected for the response values, internal fault on device may be indicated
-            if (response_data[4] == 0xFF):
+            if (response_data[6] == 0xFF):
                 self.node.get_logger().warn(f"Device on path {path_id} may be experiencing internal fault")
             
             self.check_fault_threshold(device)
@@ -119,7 +119,7 @@ class BusManager():
         msg = BusState()
         msg.active_paths = [False] * self.num_paths
         msg.device_ids = [0] * self.num_paths
-        msg.device_data = [0] * (self.num_paths * 2)
+        msg.device_data = [0] * (self.num_paths * 4)
         #Update the previous active device list
         self.prev_active_paths = self.active_paths.copy()
 
@@ -131,9 +131,10 @@ class BusManager():
             else:
                 if device.status == "active":
                     sent_packet = self.frame_message(path_id, device.id, device.cmd)
-                    response = [path_id] + [0x00] * 3 + [0xFF, 0xBF] #Default response in case of failure, with recognizable invalid checksum and path_id for debugging
+                    response = [path_id] + [0x00] * 5 + [0xFF, 0xBF] #Default response in case of failure, with recognizable invalid checksum and path_id for debugging
                     try:
                         response = self.spi.transfer(path_id, sent_packet, device.channel, device.comms_rate)
+                        # self.node.get_logger().info(f"Received {response} from device on path {path_id} for sent packet {sent_packet}")
                     except Exception as e:
                         self.node.get_logger().error(f"SPI transfer failed on path {path_id}: {e}")
                         self.check_fault_threshold(device)
@@ -147,7 +148,7 @@ class BusManager():
                         self.active_paths[path_id] = True
                         msg.active_paths[path_id] = True
                         msg.device_ids[path_id] = device.id
-                        msg.device_data[path_id*2:path_id*2+2] = response[3:5] #Assuming data is always 2 bytes, and in these positions, may need to be updated based on actual response format
+                        msg.device_data[path_id*4:path_id*4+4] = response[3:7] #Assuming data is always 4 bytes, and in these positions, may need to be updated based on actual response format
                         self.node.get_logger().info(f"Successful communication on path {path_id}, sent data: {sent_packet}, received data: {response}")
                 elif (device.status == "inactive"):
                         self.discover_device(device)

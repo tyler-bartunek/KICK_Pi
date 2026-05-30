@@ -1,2 +1,2 @@
 bool[6] paths
-uint8[12] cmd_data
+uint8[24] cmd_data

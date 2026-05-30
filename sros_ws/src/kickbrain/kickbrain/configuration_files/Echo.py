@@ -14,12 +14,12 @@ class Echo(Configuration):
         linear_vel = int(round(self.compute_amplitude(vel_cmd.linear.x, vel_cmd.linear.y, vel_cmd.linear.z))) % 256
         angular_vel = int(round(self.compute_amplitude(vel_cmd.angular.x, vel_cmd.angular.y, vel_cmd.angular.z))) % 256
 
-        return [linear_vel, angular_vel] * 6
+        return [0, 0, linear_vel, angular_vel] * 6
 
     def compute_received(self, device_data) -> Twist:
 
-        #2-byte int sent to each module, assumed constant MSB first
-        echoed = (device_data[0] << 8) | device_data[1]
+        #2-byte int sent to each module, assumed constant MSB first.
+        echoed = (device_data[2] << 8) | device_data[3]
         vel_types = ['linear', 'angular']
         components = ['x', 'y', 'z']
 
