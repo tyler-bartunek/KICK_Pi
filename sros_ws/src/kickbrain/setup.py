@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'kickbrain = kickbrain.kickbrain_node:main',
             'test_echo = kickbrain.test_echo_node:main',
+            'test_motor = kickbrain.test_motor_node:main',
         ],
     },
 )
