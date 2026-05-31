@@ -10,7 +10,7 @@ from geometry_msgs.msg import Twist
 from kickbot_interfaces.srv import ConfigUpdate
 
 #Configuration files for different kinematic configurations
-from .configuration_files import CONFIGURATIONS, PARTIAL_CONFIGURATIONS
+from .configuration_files import CONFIGURATIONS, PARTIAL_CONFIGURATIONS, TestMotor
 
 class TestMotorNode(Node):
 
@@ -60,8 +60,10 @@ class TestMotorNode(Node):
             self.get_logger().info(f"Loaded configuration: {config_class.__name__}")
         elif key in PARTIAL_CONFIGURATIONS:
             # Check for if it is one of the two motor configurations, and if so, assign the test_motor configuration which just sends a simple command to the motor
-            if key == frozenset({0x02}) or key == frozenset({0x03}):
-                config_class = TestMotor
+            if key == frozenset({0x00, 0x02}) or key == frozenset({0x00, 0x03}):
+                self.config = TestMotor(self, active_paths, device_ids)
+                self.kinematic_config = "TestMotor"
+                self.get_logger().info(f"Loaded configuration: TestMotor for partial motor configuration")
         else:
             self.get_logger().error(f"Unrecognized device configuration: {key}")
 
@@ -77,21 +79,18 @@ class TestMotorNode(Node):
         #Generate a pseudo-velocity command that iterates from 0 to the max motor command, then back down, to test the echo functionality
         if self.desired_vel is None:
             self.desired_vel = Twist()
-            self.linear_cmd_value = 0
             self.angular_cmd_value = 0
             self.increment = 100
         else:
             #Increment command values together to maintain a consistent ratio between linear and angular components, which should be reflected in the feedback if the echo configuration is working correctly
-            self.linear_cmd_value += self.increment
             self.angular_cmd_value += self.increment
-            if self.linear_cmd_value > 10000 or self.linear_cmd_value < -10000:
+            if self.angular_cmd_value > 10000 or self.angular_cmd_value < -10000:
                 self.increment *= -1
                 self.angular_cmd_value += self.increment * 2
-                self.linear_cmd_value += self.increment * 2  # Reverse direction and step back within bounds
             
             #Set linear and angular components of the desired velocity message
             # to be equal-valued components that have magnitude equal to the linear_cmd_value and angular_cmd_value arguments
-            self.desired_vel.angular.z = self.linear_cmd_value
+            self.desired_vel.angular.z = self.angular_cmd_value
 
 
     def bus_callback(self, msg):

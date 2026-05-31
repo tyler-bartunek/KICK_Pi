@@ -18,15 +18,16 @@ class TestMotor(Configuration):
         
         vel = int(round(vel_cmd.angular.z)) # Use the angular.z component of the velocity command as the motor command, rounded to nearest int
         
-        if abs(vel) > 10000:  # Cap the command value to prevent overflow, based on expected motor command range
+        if abs(vel) > 10000:  # Cap the command value for compatibility with motor driver codebase
             vel = 10000 if vel > 0 else -10000
             
         vel_high_byte = (vel >> 8) & 0xFF
         vel_low_byte = vel & 0xFF
         
-        for path in self.active_paths:
+        for path_id, path in enumerate(self.active_paths):
             if path:
-                control_signal[4*path:4*path+4] = [0, 0, vel_high_byte, vel_low_byte]
+                control_signal[4*path_id:4*path_id+4] = [0, 0, vel_high_byte, vel_low_byte]
+            
          
         return control_signal
 
