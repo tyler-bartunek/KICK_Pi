@@ -10,7 +10,7 @@ from geometry_msgs.msg import Twist
 from kickbot_interfaces.srv import ConfigUpdate
 
 #Configuration files for different kinematic configurations
-from .configuration_files import CONFIGURATIONS, PARTIAL_CONFIGURATIONS, TestMotor
+from kick_configs import CONFIGURATIONS, PARTIAL_CONFIGURATIONS, TestMotor
 
 class TestMotorNode(Node):
 
