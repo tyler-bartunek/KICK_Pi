@@ -2,7 +2,7 @@
 #Import client library
 import rclpy
 from rclpy.node import Node
-
+from rcl_interfaces.msg import SetParametersResult
 
 from .bus_manager import BusManager
 
@@ -13,9 +13,19 @@ from kickbot_interfaces.srv import ConfigUpdate
 
 
 class EchoTestHubNode(Node):
+    
+    PIN_PARAM_NAMES = ['oe_pin', 'latch_pin', 'sck_pin', 'data_pin', 'sync_pin', 'ce_pin_option', 'spi_channel']
 
     def __init__(self):
         super().__init__("test_hub")
+        
+        self.declare_parameter('oe_pin', 5)
+        self.declare_parameter('latch_pin', 6)
+        self.declare_parameter('sck_pin', 13)
+        self.declare_parameter('data_pin', 26)
+        self.declare_parameter('sync_pin', 25)
+        self.declare_paremeter('ce_pin_option', 0)
+        self.declare_parameter('spi_channel', 0)
 
         #Create the BusManager object, fetch the initial state of the bus
         self.bus = BusManager(self)
@@ -60,6 +70,20 @@ class EchoTestHubNode(Node):
             self.get_logger().info(f"Config update response: {result.configuration}")
         except Exception as e:
             self.get_logger().error(f"Config update service call failed: {e}")
+            
+    def build_pin_dict(self):
+        
+        return {param:self.get_parameter(param)._value for param in self.PIN_PARAM_NAMES}
+    
+    def parameter_callback(self, params):
+        
+        if any(param.name in pin_params for param in params):
+            # Cleanly shut down existing harness
+            self.bus.spi.cleanup()
+            # Rebuild pin dict with updated values
+            self.bus.spi = Harness(self.build_pin_dict())
+            
+        return SetParametersResult(successful=True)
 
 
 

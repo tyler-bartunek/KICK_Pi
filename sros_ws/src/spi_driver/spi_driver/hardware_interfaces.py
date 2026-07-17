@@ -7,14 +7,13 @@ import spidev
 
 class ShiftRegister:
 
-    def __init__(self):
+    def __init__(self, data_pin:int, latch_pin:int, sck_pin:int, oe_pin:int):
 
-        #Hard-coding likely not ideal, but compromise until we know more about
-        #how this plays with ROS.
-        self.data_pin = 26
-        self.latch_pin = 6
-        self.sck_pin = 13
-        self.oe_pin = 5
+        #Initialize pins
+        self.data_pin = data_pin
+        self.latch_pin = latch_pin
+        self.sck_pin = sck_pin
+        self.oe_pin = oe_pin
 
         #Configure GPIO pins
         self.chip = gpiod.Chip("/dev/gpiochip0")
@@ -81,12 +80,17 @@ class ShiftRegister:
 
 class Harness:
 
-    def __init__(self):
+    def __init__(self, pins:dict[str,int]):
+        
+        DATA = pins['data_pin']
+        LATCH = pins['latch_pin']
+        SCK = pins['sck_pin']
+        OE = pins['oe_pin']
 
-        self.reg = ShiftRegister()
+        self.reg = ShiftRegister(DATA, LATCH, SCK, OE)
         
         #SYNC pin, need to configure
-        self.sync_pin = 25
+        self.sync_pin = pins['sync_pin']
         
         self.sync_request = self.reg.chip.request_lines(
         consumer="harness_sync",
@@ -96,17 +100,21 @@ class Harness:
                 output_value=Value.ACTIVE  # Active high by default, sync pulse pulls low
             )
         })
+        
+        #Define SPI channel and CE pin
+        self.channel = pins['spi_channel']
+        self.ce = pins['ce_pin_option']
 
         #Initialize spi as None so enable bus logic works
         self.spi = None
 
 
-    def enable_bus(self, channel, rate) -> None:
+    def enable_bus(self, rate) -> None:
 
         if not self.spi:
             #Create and configure the spi object
             self.spi = spidev.SpiDev()
-            self.spi.open(channel, 0) #Bus 0, Device (CE line) 0
+            self.spi.open(self.channel, self.ce) #Bus 0, Device (CE line) 0
             #Set the rate, and mode to be mode 0
             self.spi.max_speed_hz = rate
             self.spi.mode = 0
@@ -134,12 +142,12 @@ class Harness:
         self.reg.write(line_to_select)
 
 
-    def transfer(self, line_id:int, data:int, channel, rate):
+    def transfer(self, line_id:int, data:int, rate):
 
         #open bus if not open, select line, send message, line high
 
         #Enable the bus if it isn't already active
-        self.enable_bus(channel, rate)
+        self.enable_bus(rate)
         
         #Initialize output buffer
         rx = []
@@ -165,6 +173,11 @@ class Harness:
         #Active low
         self.sync_request.set_value(self.sync_pin, Value.INACTIVE)
         self.sync_request.set_value(self.sync_pin, Value.ACTIVE)
+        
+    def cleanup(self):
+        self.reg.cleanup()
+        self.sync_request.release()
+        self.disable_bus()
 
 
 class DeviceInterface:

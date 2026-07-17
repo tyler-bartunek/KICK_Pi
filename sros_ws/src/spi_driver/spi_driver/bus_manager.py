@@ -16,8 +16,9 @@ class BusManager():
 
         self.num_paths = 6
         self.comms_rate = int(5e6)
-        self.spi = Harness()
-        self.channel = 0
+        pins = node.build_pin_dict()
+        self.spi = Harness(pins)
+        self.channel = node.get_parameter('spi_channel')._value
         self.node = node
         self.devices = {path_id:DeviceInterface(path_id, self.channel) for path_id in range(self.num_paths)}
         self.device_ids = [0] * self.num_paths
@@ -36,7 +37,7 @@ class BusManager():
         while ((response[0] & 0x7) != path_id) or (response[1] == 0x00):
             try:
                 # self.node.get_logger().info(f"Attempting handshake on path {path_id}, with message {handshake_message}")
-                response = self.spi.transfer(path_id, handshake_message, self.channel, discovery_rate)
+                response = self.spi.transfer(path_id, handshake_message, discovery_rate)
                 # sleep(0.01) #Short delay to allow the device to process the handshake and respond, may need to be tuned based on actual device behavior
                 # self.node.get_logger().info(f"Attempting connection on path {path_id}, received response: {response}")
             except Exception as e:
@@ -133,7 +134,7 @@ class BusManager():
                     sent_packet = self.frame_message(path_id, device.id, device.cmd)
                     response = [path_id] + [0x00] * 5 + [0xFF, 0xBF] #Default response in case of failure, with recognizable invalid checksum and path_id for debugging
                     try:
-                        response = self.spi.transfer(path_id, sent_packet, device.channel, device.comms_rate)
+                        response = self.spi.transfer(path_id, sent_packet, device.comms_rate)
                         # self.node.get_logger().info(f"Received {response} from device on path {path_id} for sent packet {sent_packet}")
                     except Exception as e:
                         self.node.get_logger().error(f"SPI transfer failed on path {path_id}: {e}")
