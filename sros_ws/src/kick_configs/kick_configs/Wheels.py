@@ -17,8 +17,8 @@ class Wheels(Configuration):
         self.jacobian = None
         self.detect_configuration()
 
-        if self.jacobian:
-            self.inertia = self.compute_inertia_matrix()
+        # if self.jacobian:
+        #     self.inertia = self.compute_inertia_matrix()
 
         self.control_gains = {'P':None, 'I':None, 'D':None} #TODO: Tune control gains for each configuration, and implement control law in fetch_commands
         self.error_integral = 0
@@ -60,7 +60,7 @@ class Wheels(Configuration):
         if self.control_gains['D']:
             raw_control_signal += self.control_gains['D'] @ self.error_deriv
 
-        control_signal = self.jacobian.T @ self.inertia @ raw_control_signal
+        # control_signal = self.jacobian.T @ self.inertia @ raw_control_signal
 
         #TODO: Need to map control signal to correct wheel data indices
          
@@ -86,21 +86,34 @@ class Wheels(Configuration):
         return self.dict_to_twist(return_dict)
 
     def X_Jacobian(self):
+        
         raise NotImplementedError
 
     def O_Jacobian(self):
+
         raise NotImplementedError
 
     def vel_to_array(self, vel: Twist) -> np.ndarray:
 
         return np.array([vel.linear.x, vel.linear.y, vel.angular.z])
+    
+    #Unclear if this formulation of the inertia matrix is useful/correct at this stage.
 
-    def compute_inertia_matrix(self, motor_inertias: list = [9.1818e-6]*4) -> np.ndarray:
-        #Compute the inertia Jacobian based on the current configuration and motor inertias, to be used in control loop
-        inertia_motor_space = np.diag(motor_inertias)
-        try:
-            return np.linalg.pinv(self.jacobian) @ inertia_motor_space @ np.linalg.pinv(self.jacobian.T)
-        except np.linalg.LinAlgError:
-            self.node.get_logger().error("Jacobian is singular, cannot compute inertia Jacobian")
-            return np.eye(6) #Fallback to identity, which is not ideal but prevents total failure of control loop
+    # def compute_inertia_matrix(self, motor_inertias: list = [9.1818e-6]*4) -> np.ndarray:
+    #     #Compute the inertia Jacobian based on the current configuration and motor inertias, to be used in control loop
+    #     inertia_motor_space = np.diag(motor_inertias)
+    #     try:
+    #         return np.linalg.pinv(self.jacobian) @ inertia_motor_space @ np.linalg.pinv(self.jacobian.T)
+    #     except np.linalg.LinAlgError:
+    #         self.node.get_logger().error("Jacobian is singular, cannot compute inertia Jacobian")
+    #         return np.eye(6) #Fallback to identity, which is not ideal but prevents total failure of control loop
+    
+    def compute_contact_coords(self):
+        
+        module_locs = self.compute_module_coords()
+        
+        #TODO: Introduce offsets
+        
+        raise NotImplementedError
+        
         

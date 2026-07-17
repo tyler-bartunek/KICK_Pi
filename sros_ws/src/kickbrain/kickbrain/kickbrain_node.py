@@ -2,6 +2,7 @@
 #Basic ROS functionality
 import rclpy
 from rclpy.node import Node
+from rcl_interfaces.msg import SetParametersResult
 
 #Topic message formats
 from kickbot_interfaces.msg import BatteryInfo, ActuatorCmdFrame, BusState
@@ -22,6 +23,9 @@ class KickbrainNode(Node):
         self.battery_threshold = 3.1 #Voltage threshold for low battery warning, in volts
         self.config = None
         self.kinematic_config = 'Echo'
+        #modified by GUI
+        self.declare_parameter('rail-spacing', 100) #Separation between rails, mm. Distance between central flat portions of rail geometry
+        self.declare_parameter('module-placement', [0, 0, 0, 0, 0, 0]) #Module offset from assumed connection location, #notches
 
         self.desired_vel = None
         self.last_feedback = None
