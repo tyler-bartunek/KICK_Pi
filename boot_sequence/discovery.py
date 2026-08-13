@@ -1,12 +1,35 @@
 """
 This module is responsible for registering the _kickbot._tcp.local. service on the local network using Zeroconf (mDNS) 
 so that other devices can discover it.
+
+Also handles the trigger to launch the kickbot container and start executing the core software.
+
+Future: launch on startup via systemd and also get the WPA supplicant settings figured out.
 """
 
 from time import sleep
 import socket
 from zeroconf import IPVersion, ServiceInfo, Zeroconf
+import subprocess
+import threading
 
+
+def start_stack():
+    subprocess.Popen(["sh", "purge_docker.sh"])
+    supbrocess.Popen(["sh", "configure_docker.sh"])
+
+
+def serve_trigger():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("", 5000))
+    server.listen(1)
+    while True:
+        conn, _ = server.accept()
+        if conn.recv(1024) == b"START":
+            start_stack()
+            conn.sendall(b"STARTING")
+        conn.close()
 
 
 def register_zeroconf(zc:Zeroconf) -> ServiceInfo:
@@ -39,7 +62,7 @@ def register_zeroconf(zc:Zeroconf) -> ServiceInfo:
         server="kickbot.local.",
     )
     
-    zc.register_service(info)
+    zc.register_service(info, allow_name_change=True)
     print("Registering service...")
     
     return info
@@ -54,6 +77,7 @@ def main():
     
     try:
         while True:
+            serve_trigger()
             sleep(0.1)  # Keep the program running to maintain the service registration, replace with 
     except KeyboardInterrupt:
         pass
