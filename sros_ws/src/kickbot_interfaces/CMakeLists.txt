@@ -13,6 +13,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BatteryInfo.msg"
   "msg/ActuatorCmdFrame.msg"
   "msg/BusState.msg"
+  "msg/BotState.msg"
   "srv/ConfigUpdate.srv"
 )
 

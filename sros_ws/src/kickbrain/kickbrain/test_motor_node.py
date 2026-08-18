@@ -35,13 +35,19 @@ class TestMotorNode(Node):
         self.cmd_timer = self.create_timer(cmd_timer_period, self.cmd_timer_callback)
 
         #Create the subscriber to the bus state topic
-        self.bus_subscriber = self.create_subscription(BusState, 'kickbot/bus_state', self.bus_callback, 10)
+        self.bus_subscriber = self.create_subscription(BusState, '/bus_state', self.bus_callback, 10)
 
         #Create service server for configuration updates
-        self.config_server = self.create_service(ConfigUpdate, 'kickbot/config_update', self.config_update_callback)
+        self.config_server = self.create_service(ConfigUpdate, '/config_update', self.config_update_callback)
+        
+        #Publisher for bot state topic
+        bot_state_timer_freq = 20.0  # Hz, subject to Pi 3B+ reality
+        self.state_timer_period = 1 / bot_state_timer_freq
+        self.state_timer = self.create_timer(self.state_timer_period, self.state_update)
+        self.bot_state_publisher = self.create_publisher(BotState, '/bot_state', 10)
 
         #Create publisher for actuator command topic
-        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'kickbot/cmd', 10)
+        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'/cmd', 10)
 
     def config_ready(self) -> bool:
         if not self.config:
@@ -109,7 +115,15 @@ class TestMotorNode(Node):
         msg.cmd_data = commands
         self.actuator_cmd_publisher.publish(msg)
 
+    def state_update(self):
         
+        msg = BotState()
+        msg.active_paths = self.last_feedback.active_paths
+        msg.devices = self.last_feedback.devices
+        msg.voltage = self.voltage
+        #TODO: Add velocity to BotState definition
+        
+        self.bot_state_publisher.publish(msg)
            
 
 

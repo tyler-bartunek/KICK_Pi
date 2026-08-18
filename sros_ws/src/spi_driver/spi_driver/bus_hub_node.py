@@ -36,16 +36,16 @@ class BusHubNode(Node):
         for path_id, device in self.bus.devices.items():
             self.bus.discover_device(device)
 
-        self.config_client = self.create_client(ConfigUpdate, "kickbot/config_update")
+        self.config_client = self.create_client(ConfigUpdate, "/config_update")
 
         #Create a timer and timer callback that polls each device periodically
-        self.bus_publisher = self.create_publisher(BusState, "kickbot/bus_state", 10)
+        self.bus_publisher = self.create_publisher(BusState, "/bus_state", 10)
         timer_freq = 500. #Hz
         timer_period = 1. / timer_freq # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         #Create a subscriber that listens for commands from the KickBot node
-        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "kickbot/cmd", self.cmd_callback, 10)
+        self.cmd_subscriber = self.create_subscription(ActuatorCmdFrame, "/cmd", self.cmd_callback, 10)
 
     def timer_callback(self):
         self.detect_config_change()

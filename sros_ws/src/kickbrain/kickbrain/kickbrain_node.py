@@ -5,7 +5,7 @@ from rclpy.node import Node
 from rcl_interfaces.msg import SetParametersResult
 
 #Topic message formats
-from kickbot_interfaces.msg import BatteryInfo, ActuatorCmdFrame, BusState
+from kickbot_interfaces.msg import BatteryInfo, ActuatorCmdFrame, BusState, BotState
 from geometry_msgs.msg import Twist
 
 #Service message formats
@@ -31,24 +31,30 @@ class KickbrainNode(Node):
         self.last_feedback = None
 
         #Create control loop parameters
-        timer_freq = 100.0  # Hz, subject to Pi 3B+ reality
-        self.timer_period = 1 / timer_freq
-        self.timer = self.create_timer(self.timer_period, self.control_loop)
+        control_timer_freq = 100.0  # Hz, subject to Pi 3B+ reality
+        self.control_timer_period = 1 / control_timer_freq
+        self.control_timer = self.create_timer(self.control_timer_period, self.control_loop)
 
         #Create the subscriber to the battery monitoring topic
         self.battery_subscriber = self.create_subscription(BatteryInfo, 'battery-info', self.battery_callback, 10)
 
         #Create the subscriber to the motion_plan topic, notably velocity commands
-        self.vel_subscriber = self.create_subscription(Twist, 'kickbot/cmd_vel', self.vel_callback, 10)
+        self.vel_subscriber = self.create_subscription(Twist, '/cmd_vel', self.vel_callback, 10)
 
         #Create the subscriber to the bus state topic
-        self.bus_subscriber = self.create_subscription(BusState, 'kickbot/bus_state', self.bus_callback, 10)
+        self.bus_subscriber = self.create_subscription(BusState, '/bus_state', self.bus_callback, 10)
 
         #Create service server for configuration updates
-        self.config_server = self.create_service(ConfigUpdate, 'kickbot/config_update', self.config_update_callback)
+        self.config_server = self.create_service(ConfigUpdate, '/config_update', self.config_update_callback)
+        
+        #Publisher for bot state topic
+        bot_state_timer_freq = 20.0  # Hz, subject to Pi 3B+ reality
+        self.state_timer_period = 1 / bot_state_timer_freq
+        self.state_timer = self.create_timer(self.state_timer_period, self.state_update)
+        self.bot_state_publisher = self.create_publisher(BotState, '/bot_state', 10)
 
         #Create publisher for actuator command topic
-        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'kickbot/cmd', 10)
+        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'/cmd', 10)
 
     def config_ready(self) -> bool:
         if not self.config:
@@ -79,6 +85,7 @@ class KickbrainNode(Node):
 
     def battery_callback(self, msg):
         #TODO: Handle incoming battery status message, and decide how to warn the user and when to shut it down
+        self.voltage = msg.voltage
         if msg.voltage < self.battery_threshold:
             self.get_logger().warn(f"Battery voltage low: {msg.voltage:.2f}V")
 
@@ -91,6 +98,7 @@ class KickbrainNode(Node):
     def bus_callback(self, msg):
         
         self.last_feedback = msg
+        
 
     def control_loop(self):
 
@@ -103,6 +111,16 @@ class KickbrainNode(Node):
         msg = ActuatorCmdFrame()
         msg.cmd_data = commands
         self.actuator_cmd_publisher.publish(msg)
+        
+    def state_update(self):
+        
+        msg = BotState()
+        msg.active_paths = self.last_feedback.active_paths
+        msg.devices = self.last_feedback.devices
+        msg.voltage = self.voltage
+        #TODO: Add velocity update to BotState definition
+        
+        self.bot_state_publisher.publish(msg)
 
         
 

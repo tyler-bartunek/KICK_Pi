@@ -35,13 +35,13 @@ class TestEchoNode(Node):
         self.cmd_timer = self.create_timer(cmd_timer_period, self.cmd_timer_callback)
 
         #Create the subscriber to the bus state topic
-        self.bus_subscriber = self.create_subscription(BusState, 'kickbot/bus_state', self.bus_callback, 10)
+        self.bus_subscriber = self.create_subscription(BusState, '/bus_state', self.bus_callback, 10)
 
         #Create service server for configuration updates
-        self.config_server = self.create_service(ConfigUpdate, 'kickbot/config_update', self.config_update_callback)
+        self.config_server = self.create_service(ConfigUpdate, '/config_update', self.config_update_callback)
 
         #Create publisher for actuator command topic
-        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'kickbot/cmd', 10)
+        self.actuator_cmd_publisher = self.create_publisher(ActuatorCmdFrame,'/cmd', 10)
 
     def config_ready(self) -> bool:
         if not self.config:
