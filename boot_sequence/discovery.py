@@ -15,43 +15,38 @@ import threading
 
 
 def start_stack():
-    subprocess.Popen(["sh", "purge_docker.sh"])
-    supbrocess.Popen(["sh", "configure_docker.sh"])
+    subprocess.Popen(["sh", "../purge_docker.sh"])
+    subprocess.Popen(["sh", "../configure_docker.sh"])
 
 
 def serve_trigger():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(("", 5000))
+    server.bind(("", 9090))
     server.listen(1)
     while True:
         conn, _ = server.accept()
         if conn.recv(1024) == b"START":
+            print("Attempting Docker launch")
             start_stack()
             conn.sendall(b"STARTING")
         conn.close()
 
+def get_lan_ip() -> str:
+    """Returns this machine's real outward-facing IP, bypassing /etc/hosts entirely."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))   # never actually sends anything -- just picks a route
+        return s.getsockname()[0]
+    finally:
+        s.close()
+        
 
 def register_zeroconf(zc:Zeroconf) -> ServiceInfo:
     
     hostname = socket.gethostname()
-    addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-
-    packed_addresses = []
-    string_addresses = []
-
-    for item in addr_info:
-        family = item[0]          # socket.AF_INET or socket.AF_INET6
-        ip_string = item[4][0]    # The raw IP string ("192.168.1.5" or "fe80::...")
-        
-        # Filter out duplicate network loops if necessary
-        if ip_string in string_addresses:
-            continue
-        string_addresses.append(ip_string)
-        
-        # 2. Match the exact address family with inet_pton dynamically
-        packed_ip = socket.inet_pton(family, ip_string)
-        packed_addresses.append(packed_ip)
+    lan_ip = get_lan_ip()
+    packed_addresses = [socket.inet_pton(socket.AF_INET, lan_ip)]
     
     info = ServiceInfo(
         "_kickbot._tcp.local.",
